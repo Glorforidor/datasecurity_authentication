@@ -16,6 +16,11 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         super();
     }
 
+    private void log(String msg) {
+        // TODO: perhaps make this logger more interessting by log to a file.
+        System.out.println(msg);
+    }
+
     @Override
     public void print(String filename, String printer) throws RemoteException {
         System.out.println(String.format("I am printing: %s, on printer: %s", filename, printer));
@@ -45,7 +50,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     @Override
     public boolean start() throws RemoteException {
         // TODO: might rethink the return value
-        System.out.println("Starting server");
+        log("Starting server");
         this.isRunning = true;
         return isRunning;
     }
@@ -53,7 +58,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     @Override
     public boolean stop() throws RemoteException {
         // TODO: might rethink the return value
-        System.out.println("Stopping server");
+        log("Stopping server");
         this.isRunning = false;
         return isRunning;
     }
@@ -61,12 +66,16 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     @Override
     public boolean restart() throws RemoteException {
         if (isRunning) {
-            System.out.println("Stopping Server");
+            log("Stopping Server");
             isRunning = false;
-            System.out.println("Starting server");
+
+            log("Clear print queue");
+            printQueue.clear();
+
+            log("Starting server");
             isRunning = true;
         } else {
-            System.out.println("Server was stopped; starting server");
+            log("Server was stopped; starting server");
             isRunning = true;
         }
 
@@ -87,11 +96,13 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public String readConfig(String parameter) throws RemoteException {
+        log(String.format("Reading configuration with parameter: %s", parameter));
         return config.get(parameter);
     }
 
     @Override
     public void setConfig(String parameter, String value) throws RemoteException {
+        log(String.format("Setting configuration with parameter: %s, with value: %s", parameter, value));
         config.put(parameter, value);
     }
 }
