@@ -7,8 +7,15 @@ import java.rmi.registry.Registry;
 public class PrintServer {
     public static void main(String[] args) throws RemoteException {
         Registry registry = LocateRegistry.createRegistry(5099);
-        registry.rebind("print", new PrintServant());
-        registry.rebind("queue", new PrintServant());
-        registry.rebind("topQueue", new PrintServant());
+        PrintServant servant = new PrintServant();
+        registry.rebind("print", servant);
+        registry.rebind("queue", servant);
+        registry.rebind("topQueue", servant);
+        registry.rebind("status", servant);
+        registry.rebind("start", servant);
+        registry.rebind("restart", servant);
+        registry.rebind("stop", servant);
+        registry.rebind("readConfig", servant);
+        registry.rebind("setConfig", servant);
     }
 }
