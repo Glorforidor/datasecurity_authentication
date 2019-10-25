@@ -23,7 +23,12 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public void print(String filename, String printer) throws RemoteException {
-        System.out.println(String.format("I am printing: %s, on printer: %s", filename, printer));
+        if (!isRunning) {
+            // TODO: maybe a bit much
+            throw new RemoteException("Printer is not running");
+        }
+
+        log(String.format("I am printing: %s, on printer: %s", filename, printer));
         printQueue.add(filename);
     }
 
