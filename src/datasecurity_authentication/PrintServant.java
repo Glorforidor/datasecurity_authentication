@@ -10,6 +10,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     private static final long serialVersionUID = 8627793523520780643L;
     private LinkedList<String> printQueue = new LinkedList<>();
     private boolean isRunning;
+    private Map<String, String> config = new HashMap<>();
 
     public PrintServant() throws RemoteException {
         super();
@@ -86,11 +87,11 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public String readConfig(String parameter) throws RemoteException {
-        return null;
+        return config.get(parameter);
     }
 
     @Override
     public void setConfig(String parameter, String value) throws RemoteException {
-
+        config.put(parameter, value);
     }
 }
