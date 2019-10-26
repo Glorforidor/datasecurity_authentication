@@ -45,8 +45,9 @@ public class Client {
 
 		void run() throws IOException {
 			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+			var running = true;
 			menu();
-			loop: while (true) {
+			while (running) {
 				var input = br.readLine();
 				switch (input) {
 				case "1":
@@ -84,7 +85,8 @@ public class Client {
 					srv.restart();
 					break;
 				case "8":
-					break loop;
+					running = false;
+					break;
 				case "?":
 					menu();
 					break;
