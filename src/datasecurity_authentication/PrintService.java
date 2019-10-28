@@ -67,4 +67,8 @@ public interface PrintService extends Remote {
      * @throws RemoteException
      */
     void setConfig(String parameter, String value) throws RemoteException;
+
+    boolean login(String name, String pass) throws RemoteException;
+
+    boolean logout(String name, String pass) throws RemoteException;
 }

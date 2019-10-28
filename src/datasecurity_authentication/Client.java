@@ -41,6 +41,8 @@ public class Client {
 			System.out.println("(6) Stop");
 			System.out.println("(7) Restart");
 			System.out.println("(8) Quit");
+			System.out.println("(9) Login");
+			System.out.println("(10) Logout");
 		}
 
 		void run() throws IOException {
@@ -86,6 +88,22 @@ public class Client {
 					break;
 				case "8":
 					running = false;
+					break;
+				case "9": {
+					System.out.print("Write your username: ");
+					var username = br.readLine();
+					System.out.print("Write your password: ");
+					var password = br.readLine();
+					srv.login(username, password);
+				}
+					break;
+				case "10": {
+					System.out.print("Write your username: ");
+					var username = br.readLine();
+					System.out.print("Write your password: ");
+					var password = br.readLine();
+					srv.logout(username, password);
+				}
 					break;
 				case "?":
 					menu();

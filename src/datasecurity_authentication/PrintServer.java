@@ -17,5 +17,7 @@ public class PrintServer {
         registry.rebind("stop", servant);
         registry.rebind("readConfig", servant);
         registry.rebind("setConfig", servant);
+        registry.rebind("login", servant);
+        registry.rebind("logout", servant);
     }
 }
