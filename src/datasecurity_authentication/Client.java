@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class Client {
 	public static void main(String[] args) throws MalformedURLException, RemoteException, NotBoundException {
-		PrintService service = (PrintService) Naming.lookup("rmi://localhost:5099/print");
+		PrintService service = (PrintService) Naming.lookup("rmi://localhost:5099/printserver");
 		try {
 			new CLI(service).run();;
 		} catch (IOException e) {
@@ -95,16 +95,16 @@ public class Client {
 					System.out.print("Write your password: ");
 					var password = br.readLine();
 					srv.login(username, password);
-				}
 					break;
+				}
 				case "10": {
 					System.out.print("Write your username: ");
 					var username = br.readLine();
 					System.out.print("Write your password: ");
 					var password = br.readLine();
 					srv.logout(username, password);
-				}
 					break;
+				}
 				case "?":
 					menu();
 					break;
