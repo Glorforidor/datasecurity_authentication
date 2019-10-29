@@ -15,14 +15,15 @@ public interface PrintService extends Remote {
 
     /**
      * queue lists the printer queue by jobnumber and filename.
+     * @param printer the printer to get queue from.
      * @return Map<Integer, String>
      */
-    Map<Integer, String> queue() throws RemoteException;
+    Map<Integer, String> queue(String printer) throws RemoteException;
 
     /**
      * topQueue moves the job to the top of the print queue.
      */
-    void topQueue(int job) throws RemoteException;
+    void topQueue(String printer, int job) throws RemoteException;
 
     /**
      * start starts the print server.
@@ -46,11 +47,12 @@ public interface PrintService extends Remote {
     boolean restart() throws RemoteException;
 
     /**
-     * status returns the status of the print server.
+     * status returns the status of the print.
+     * @param printer printer to get status from.
      * @return status of the print server.
      * @throws RemoteException
      */
-    String status() throws RemoteException;
+    String status(String printer) throws RemoteException;
 
     /**
      * readConfig reads the config file and return the value of the assosiated parameter.

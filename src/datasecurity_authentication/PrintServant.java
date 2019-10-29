@@ -1,14 +1,12 @@
 package datasecurity_authentication;
 
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.PBEParameterSpec;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -16,7 +14,7 @@ import java.util.Map;
 
 public class PrintServant extends UnicastRemoteObject implements PrintService {
     private static final long serialVersionUID = 8627793523520780643L;
-    private LinkedList<String> printQueue = new LinkedList<>();
+    private Map<String, LinkedList<String>> printerQueues = new HashMap<>();
     private boolean isRunning;
     private Map<String, String> config = new HashMap<>();
     private LinkedList<User> users = new LinkedList<>();
@@ -26,9 +24,9 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
             while ((row = csvReader.readLine()) != null) {
                 System.out.println(row);
                 String[] data = row.split(",");
-                users.add(new User(data[0],data[1],data[2]));
+                users.add(new User(data[0], data[1], data[2]));
             }
-        } catch (IOException e ) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -49,28 +47,44 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
             throw new RemoteException("Printer is not running");
         }
 
-        log(String.format("I am printing: %s, on printer: %s", filename, printer));
-        printQueue.add(filename);
+        log(String.format("Forwarding: %s, to printer: %s", filename, printer));
+        if (printerQueues.containsKey(printer)) {
+            printerQueues.get(printer).add(filename);
+        } else {
+            LinkedList<String> queue = new LinkedList<>();
+            queue.add(filename);
+            printerQueues.put(printer, queue);
+        }
     }
 
     @Override
-    public Map<Integer, String> queue() throws RemoteException {
-        Map<Integer, String> queue = new HashMap<>(); 
-        for (int i = 0; i < printQueue.size(); i++) {
-            queue.put(i+1, printQueue.get(i));
+    public Map<Integer, String> queue(String printer) throws RemoteException {
+        if (!printerQueues.containsKey(printer)) {
+            throw new RemoteException("Printer does not exist");
+        }
+
+        var printerQueue = printerQueues.get(printer);
+        Map<Integer, String> queue = new HashMap<>();
+        for (int i = 0; i < printerQueue.size(); i++) {
+            queue.put(i + 1, printerQueue.get(i));
         }
 
         return queue;
     }
 
     @Override
-    public void topQueue(int job) throws RemoteException {
+    public void topQueue(String printer, int job) throws RemoteException {
         if (job < 1) {
             throw new IllegalArgumentException("job must be above 0");
         }
+        if (!printerQueues.containsKey(printer)) {
+            throw new RemoteException("Printer does not exist");
+        }  
+        
         // remove the job from queue and then added it back as the first element.
-        var jobToMove = printQueue.remove(job-1);
-        printQueue.addFirst(jobToMove);
+        var printerQueue = printerQueues.get(printer);
+        var jobToMove = printerQueue.remove(job - 1);
+        printerQueue.addFirst(jobToMove);
     }
 
     @Override
@@ -95,8 +109,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
             log("Stopping Server");
             isRunning = false;
 
-            log("Clear print queue");
-            printQueue.clear();
+            log("Clear all printer queues");
+            printerQueues.clear();
 
             log("Starting server");
             isRunning = true;
@@ -109,14 +123,17 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     }
 
     @Override
-    public String status() throws RemoteException {
-        String status = "Printer is %s; Remaining jobs: " + printQueue.size();
+    public String status(String printer) throws RemoteException {
+        if (!printerQueues.containsKey(printer)) {
+            throw new RemoteException("Printer does not exist");
+        }
+        String status = "Printer is %s; Remaining jobs: " + printerQueues.get(printer).size();
         if (isRunning) {
             status = String.format(status, "running");
         } else {
             status = String.format(status, "not running");
         }
-        
+
         return status;
     }
 
@@ -140,12 +157,11 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
                 try {
                     MessageDigest sha = MessageDigest.getInstance("SHA-256");
                     sha.update((u.getSalt() + pass).getBytes());
-                    var b =  Base64.getEncoder().encodeToString(sha.digest());
+                    var b = Base64.getEncoder().encodeToString(sha.digest());
                     success = b.equals(u.getPass());
                     if (success) {
-                        log(String.format("User: %s has logged in",name));
-                    }
-                    else {
+                        log(String.format("User: %s has logged in", name));
+                    } else {
                         log(String.format("Login failed"));
                     }
                 } catch (NoSuchAlgorithmException e) {
@@ -165,12 +181,11 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
                 try {
                     MessageDigest sha = MessageDigest.getInstance("SHA-256");
                     sha.update((u.getSalt() + pass).getBytes());
-                    var b =  Base64.getEncoder().encodeToString(sha.digest());
+                    var b = Base64.getEncoder().encodeToString(sha.digest());
                     success = b.equals(u.getPass());
                     if (success) {
-                        log(String.format("User: %s has logged in",name));
-                    }
-                    else {
+                        log(String.format("User: %s has logged in", name));
+                    } else {
                         log(String.format("Login failed"));
                     }
                 } catch (NoSuchAlgorithmException e) {
