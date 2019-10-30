@@ -14,25 +14,18 @@ import java.util.Map;
 
 public class PrintServant extends UnicastRemoteObject implements PrintService {
     private static final long serialVersionUID = 8627793523520780643L;
-    private Map<String, LinkedList<String>> printerQueues = new HashMap<>();
+    private Map<String, LinkedList<String>> printerQueues;
     private boolean isRunning;
-    private Map<String, String> config = new HashMap<>();
-    private LinkedList<User> users = new LinkedList<>();
-    {
-        try (BufferedReader csvReader = new BufferedReader(new FileReader("users.csv"))) {
-            String row;
-            while ((row = csvReader.readLine()) != null) {
-                System.out.println(row);
-                String[] data = row.split(",");
-                users.add(new User(data[0], data[1], data[2]));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+    private Map<String, String> config;
+    private LinkedList<User> users;
 
     public PrintServant() throws RemoteException {
         super();
+        // create the database file with populated users
+        DatabaseManager.createDatabaseFile();
+        this.users = DatabaseManager.decrypt();
+        this.printerQueues = new HashMap<>();
+        this.config = new HashMap<>();
     }
 
     private void log(String msg) {
