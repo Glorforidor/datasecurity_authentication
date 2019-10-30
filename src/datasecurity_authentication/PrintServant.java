@@ -1,8 +1,5 @@
 package datasecurity_authentication;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.MessageDigest;
@@ -17,13 +14,11 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     private Map<String, LinkedList<String>> printerQueues;
     private boolean isRunning;
     private Map<String, String> config;
-    private LinkedList<User> users;
 
     public PrintServant() throws RemoteException {
         super();
         // create the database file with populated users
-        DatabaseManager.createDatabaseFile();
-        this.users = DatabaseManager.decrypt();
+        UsersManager.createDatabaseFile();
         this.printerQueues = new HashMap<>();
         this.config = new HashMap<>();
     }
@@ -144,6 +139,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public boolean login(String name, String pass) throws RemoteException {
+        var users = UsersManager.readUsers(); 
         boolean success = false;
         for (User u : users) {
             if (u.getName().equals(name)) {
@@ -168,6 +164,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public boolean logout(String name, String pass) throws RemoteException {
+        var users = UsersManager.readUsers();
         boolean success = false;
         for (User u : users) {
             if (u.getName().equals(name)) {
