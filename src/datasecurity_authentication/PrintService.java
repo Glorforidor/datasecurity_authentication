@@ -72,5 +72,5 @@ public interface PrintService extends Remote {
 
     byte[] login(String name, String pass) throws RemoteException;
 
-    boolean logout(String name, String pass) throws RemoteException;
+    boolean logout(Message msg) throws RemoteException;
 }

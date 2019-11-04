@@ -109,9 +109,14 @@ public class Client {
                         break;
                     }
                     case "10": {
-                        var username = readInput(br, "Write your username: ");
-                        var password = readInput(br, "Write your password: ");
-                        srv.logout(username, password);
+                        if (s != null) {
+                            byte[] combined = EncryptionHandler.getInstance().combiner(s);
+                            try {
+                                srv.logout(EncryptionHandler.getInstance().encrypt(combined));
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
                         break;
                     }
                     case "?":

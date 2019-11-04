@@ -1,13 +1,11 @@
 package datasecurity_authentication;
 
+import java.nio.ByteBuffer;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 
 public class PrintServant extends UnicastRemoteObject implements PrintService {
     private static final long serialVersionUID = 8627793523520780643L;
@@ -22,6 +20,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         UsersManager.createDatabaseFile();
         this.printerQueues = new HashMap<>();
         this.config = new HashMap<>();
+        this.activeTokens = new HashMap<>();
     }
 
     private void log(String msg) {
@@ -172,27 +171,26 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     }
 
     @Override
-    public boolean logout(String name, String pass) throws RemoteException {
-        var users = UsersManager.readUsers();
-        boolean success = false;
-        for (User u : users) {
-            if (u.getName().equals(name)) {
-                try {
-                    MessageDigest sha = MessageDigest.getInstance("SHA-256");
-                    sha.update((u.getSalt() + pass).getBytes());
-                    var b = Base64.getEncoder().encodeToString(sha.digest());
-                    success = b.equals(u.getPass());
-                    if (success) {
-                        log(String.format("User: %s has logged in", name));
-                    } else {
-                        log(String.format("Login failed"));
-                    }
-                } catch (NoSuchAlgorithmException e) {
-                    e.printStackTrace();
-                }
-                break;
-            }
+    public boolean logout(Message msg) throws RemoteException {
+        final boolean[] success = {false};
+        byte[] b = null;
+
+        try {
+            b = EncryptionHandler.getInstance().decrypt(msg);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return success;
+        if (b == null) throw new RemoteException();
+
+        Session s = EncryptionHandler.getInstance().splitter(b);
+        final String[] elementToRemove = {null};
+        this.activeTokens.forEach((key, session) -> {
+            if (Arrays.equals(session.getToken(), s.getToken())) {
+                success[0] = true;
+                elementToRemove[0] = key;
+            }
+        });
+        this.activeTokens.remove(elementToRemove[0]);
+        return success[0];
     }
 }

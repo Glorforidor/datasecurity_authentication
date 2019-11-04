@@ -15,9 +15,9 @@ public class EncryptionHandler {
     public static SecretKeySpec key;
 
     private EncryptionHandler() {
-        SecureRandom rand = new SecureRandom();
-        byte[] keyBytes = new byte[16];
-        rand.nextBytes(keyBytes);
+//        SecureRandom rand = new SecureRandom();
+        byte[] keyBytes = {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+//        rand.nextBytes(keyBytes);
 
         // create symmetric key
         key = new SecretKeySpec(keyBytes, 0, keyBytes.length, "AES");
@@ -51,12 +51,12 @@ public class EncryptionHandler {
         return new Message(data, cipher.getIV());
     }
 
-    public String decrypt(Message msg) throws Exception {
+    public byte[] decrypt(Message msg) throws Exception {
         Cipher cipher = Cipher.getInstance(algo);
         cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(msg.getIv()));
 
         byte[] data = cipher.doFinal(msg.getData());
-        return new String(data);
+        return data;
     }
 
     public Session splitter(byte[] b) {
@@ -80,7 +80,7 @@ public class EncryptionHandler {
         SecureRandom sr = new SecureRandom();
         byte[] b = new byte[32];
         sr.nextBytes(b);
-        return Base64.getEncoder().encode(b);
+        return b;
     }
 
 }
