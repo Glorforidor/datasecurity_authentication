@@ -14,6 +14,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     private Map<String, LinkedList<String>> printerQueues;
     private boolean isRunning;
     private Map<String, String> config;
+    private Map<String, Session> activeTokens;
 
     public PrintServant() throws RemoteException {
         super();
@@ -29,7 +30,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     }
 
     @Override
-    public void print(String filename, String printer) throws RemoteException {
+    public void print(String filename, String printer, Message msg) throws RemoteException {
         if (!isRunning) {
             // TODO: maybe a bit much
             throw new RemoteException("Printer is not running");
@@ -46,7 +47,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     }
 
     @Override
-    public Map<Integer, String> queue(String printer) throws RemoteException {
+    public Map<Integer, String> queue(String printer, Message msg) throws RemoteException {
         if (!printerQueues.containsKey(printer)) {
             throw new RemoteException("Printer does not exist");
         }
@@ -61,14 +62,14 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     }
 
     @Override
-    public void topQueue(String printer, int job) throws RemoteException {
+    public void topQueue(String printer, int job, Message msg) throws RemoteException {
         if (job < 1) {
             throw new IllegalArgumentException("job must be above 0");
         }
         if (!printerQueues.containsKey(printer)) {
             throw new RemoteException("Printer does not exist");
-        }  
-        
+        }
+
         // remove the job from queue and then added it back as the first element.
         var printerQueue = printerQueues.get(printer);
         var jobToMove = printerQueue.remove(job - 1);
@@ -76,7 +77,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     }
 
     @Override
-    public boolean start() throws RemoteException {
+    public boolean start(Message msg) throws RemoteException {
         // TODO: might rethink the return value
         log("Starting server");
         this.isRunning = true;
@@ -84,7 +85,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     }
 
     @Override
-    public boolean stop() throws RemoteException {
+    public boolean stop(Message msg) throws RemoteException {
         // TODO: might rethink the return value
         log("Stopping server");
         this.isRunning = false;
@@ -92,7 +93,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     }
 
     @Override
-    public boolean restart() throws RemoteException {
+    public boolean restart(Message msg) throws RemoteException {
         if (isRunning) {
             log("Stopping Server");
             isRunning = false;
@@ -111,7 +112,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     }
 
     @Override
-    public String status(String printer) throws RemoteException {
+    public String status(String printer, Message msg) throws RemoteException {
         if (!printerQueues.containsKey(printer)) {
             throw new RemoteException("Printer does not exist");
         }
@@ -126,20 +127,21 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     }
 
     @Override
-    public String readConfig(String parameter) throws RemoteException {
+    public String readConfig(String parameter, Message msg) throws RemoteException {
         log(String.format("Reading configuration with parameter: %s", parameter));
         return config.get(parameter);
     }
 
     @Override
-    public void setConfig(String parameter, String value) throws RemoteException {
+    public void setConfig(String parameter, String value, Message msg) throws RemoteException {
         log(String.format("Setting configuration with parameter: %s, with value: %s", parameter, value));
         config.put(parameter, value);
     }
 
     @Override
-    public boolean login(String name, String pass) throws RemoteException {
-        var users = UsersManager.readUsers(); 
+    public byte[] login(String name, String pass) throws RemoteException {
+        var users = UsersManager.readUsers();
+        byte[] by = new byte[64];
         boolean success = false;
         for (User u : users) {
             if (u.getName().equals(name)) {
@@ -147,11 +149,15 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
                     MessageDigest sha = MessageDigest.getInstance("SHA-256");
                     sha.update((u.getSalt() + pass).getBytes());
                     var b = Base64.getEncoder().encodeToString(sha.digest());
-                    success = b.equals(u.getPass());
-                    if (success) {
+                    if (b.equals(u.getPass())) {
+                        success = true;
                         log(String.format("User: %s has logged in", name));
+                        Session s = new Session(EncryptionHandler.getInstance().generateSessionToken(), 0);
+                        System.arraycopy(EncryptionHandler.getInstance().combiner(s), 0, by, 0, 64);
+                        this.activeTokens.put(u.getName(), s);
                     } else {
                         log(String.format("Login failed"));
+
                     }
                 } catch (NoSuchAlgorithmException e) {
                     e.printStackTrace();
@@ -159,7 +165,10 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
                 break;
             }
         }
-        return success;
+        if (!success) {
+            throw new RemoteException("Failed to login");
+        }
+        return by;
     }
 
     @Override

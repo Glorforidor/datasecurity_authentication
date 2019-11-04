@@ -1,7 +1,9 @@
 package datasecurity_authentication;
 
+import java.nio.ByteBuffer;
 import java.security.Key;
 import java.security.SecureRandom;
+import java.util.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -23,7 +25,7 @@ public class EncryptionHandler {
 
     public static EncryptionHandler getInstance() {
         if (instance == null) {
-            instance = new EncryptionHandler(); 
+            instance = new EncryptionHandler();
         }
 
         return instance;
@@ -32,7 +34,7 @@ public class EncryptionHandler {
 
     /**
      * encrypt encrypts string messages and return a new Message with encrypted data and the IV.
-     * @param secretKey the key to encrypt with
+     *
      * @param plaintext the plaintext to encrypt
      * @return a new Message
      * @throws Exception
@@ -41,7 +43,7 @@ public class EncryptionHandler {
         return encrypt(plaintext.getBytes("UTF-8"));
     }
 
-    public Message encrypt(byte[] plaintext) throws Exception{
+    public Message encrypt(byte[] plaintext) throws Exception {
         Cipher cipher = Cipher.getInstance(algo);
         cipher.init(Cipher.ENCRYPT_MODE, key);
 
@@ -56,4 +58,29 @@ public class EncryptionHandler {
         byte[] data = cipher.doFinal(msg.getData());
         return new String(data);
     }
+
+    public Session splitter(byte[] b) {
+        byte[] token = new byte[32];
+        byte[] count = new byte[32];
+        System.arraycopy(b, 0, token, 0, 32);
+        System.arraycopy(b, 32, count, 0, 32);
+        int c = ByteBuffer.wrap(count).getInt();
+        return new Session(token, c);
+    }
+
+    public byte[] combiner(Session s) {
+        byte[] b = new byte[64];
+        System.arraycopy(s.getToken(), 0, b, 0, 32);
+        byte[] count = ByteBuffer.allocate(32).putInt(s.getCount()).array();
+        System.arraycopy(count, 0, b, 32, 32);
+        return b;
+    }
+
+    public byte[] generateSessionToken() {
+        SecureRandom sr = new SecureRandom();
+        byte[] b = new byte[32];
+        sr.nextBytes(b);
+        return Base64.getEncoder().encode(b);
+    }
+
 }
