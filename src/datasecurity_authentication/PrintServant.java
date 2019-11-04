@@ -29,15 +29,22 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         System.out.println(msg);
     }
 
-    private boolean checkSession(Message msg) throws Exception {
+    private boolean checkAndUpdateSession(Message msg) throws Exception {
         var bytes = eh.decrypt(msg);
         var session = eh.splitter(bytes);
         var success = false;
-        for (Map.Entry<String, Session> s: activeTokens.entrySet()) {
+        for (Map.Entry<String, Session> s : activeTokens.entrySet()) {
             var activeToken = s.getValue();
+
             var tokenCheck = Arrays.equals(activeToken.getToken(), session.getToken());
-            if (tokenCheck && activeToken.getCount() + 1 == session.getCount()) {
+            if (!tokenCheck) {
+                continue;
+            }
+
+            var countCheck = activeToken.getCount() + 1 == session.getCount();
+            if (countCheck) {
                 success = true;
+                activeTokens.put(s.getKey(), session);
                 break;
             }
         }
@@ -54,7 +61,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
         boolean correct = false;
         try {
-            correct = checkSession(msg);
+            correct = checkAndUpdateSession(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -77,7 +84,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     public Map<Integer, String> queue(String printer, Message msg) throws RemoteException {
         boolean correct = false;
         try {
-            correct = checkSession(msg);
+            correct = checkAndUpdateSession(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -85,7 +92,6 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         if (!correct) {
             throw new RemoteException("Unauthorized");
         }
-
 
         if (!printerQueues.containsKey(printer)) {
             throw new RemoteException("Printer does not exist");
@@ -104,7 +110,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     public void topQueue(String printer, int job, Message msg) throws RemoteException {
         boolean correct = false;
         try {
-            correct = checkSession(msg);
+            correct = checkAndUpdateSession(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -112,7 +118,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         if (!correct) {
             throw new RemoteException("Unauthorized");
         }
-        
+
         if (job < 1) {
             throw new IllegalArgumentException("job must be above 0");
         }
@@ -130,7 +136,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     public boolean start(Message msg) throws RemoteException {
         boolean correct = false;
         try {
-            correct = checkSession(msg);
+            correct = checkAndUpdateSession(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -148,7 +154,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     public boolean stop(Message msg) throws RemoteException {
         boolean correct = false;
         try {
-            correct = checkSession(msg);
+            correct = checkAndUpdateSession(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -166,7 +172,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     public boolean restart(Message msg) throws RemoteException {
         boolean correct = false;
         try {
-            correct = checkSession(msg);
+            correct = checkAndUpdateSession(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -174,7 +180,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         if (!correct) {
             throw new RemoteException("Unauthorized");
         }
-        
+
         if (isRunning) {
             log("Stopping Server");
             isRunning = false;
@@ -196,7 +202,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     public String status(String printer, Message msg) throws RemoteException {
         boolean correct = false;
         try {
-            correct = checkSession(msg);
+            correct = checkAndUpdateSession(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -204,7 +210,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         if (!correct) {
             throw new RemoteException("Unauthorized");
         }
-        
+
         if (!printerQueues.containsKey(printer)) {
             throw new RemoteException("Printer does not exist");
         }
@@ -222,7 +228,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     public String readConfig(String parameter, Message msg) throws RemoteException {
         boolean correct = false;
         try {
-            correct = checkSession(msg);
+            correct = checkAndUpdateSession(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -238,7 +244,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     public void setConfig(String parameter, String value, Message msg) throws RemoteException {
         boolean correct = false;
         try {
-            correct = checkSession(msg);
+            correct = checkAndUpdateSession(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
