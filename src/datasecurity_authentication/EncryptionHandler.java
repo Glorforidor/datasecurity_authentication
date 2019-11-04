@@ -76,13 +76,17 @@ public class EncryptionHandler {
         return new User(new String(username).trim(), new String(password).trim());
     }
 
-    public byte[] combineAndIncrement(Session s) {
-        s.incrementCount();
+    public byte[] combine(Session s) {
         byte[] b = new byte[64];
         System.arraycopy(s.getToken(), 0, b, 0, 32);
         byte[] count = ByteBuffer.allocate(32).putInt(s.getCount()).array();
         System.arraycopy(count, 0, b, 32, 32);
         return b;
+    }
+
+    public byte[] combineAndIncrement(Session s) {
+        s.incrementCount();
+        return combine(s);
     }
 
     public byte[] combineLogin(String username, String psw) {
