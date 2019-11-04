@@ -257,7 +257,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     }
 
     @Override
-    public byte[] login(Message msg) throws RemoteException {
+    public Message login(Message msg) throws RemoteException {
         String name = null;
         String pass = null;
         try {
@@ -269,40 +269,53 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         var users = UsersManager.readUsers();
-        byte[] by = new byte[64];
+        Message outMsg = null;
         boolean success = false;
         for (User u : users) {
-            if (u.getName().equals(name)) {
-                try {
-                    MessageDigest sha = MessageDigest.getInstance("SHA-256");
-                    sha.update((u.getSalt() + pass).getBytes());
-                    var b = Base64.getEncoder().encodeToString(sha.digest());
-                    if (b.equals(u.getPass())) {
-                        success = true;
-                        log(String.format("User: %s has logged in", name));
-                        Session s = new Session(eh.generateSessionToken(), 0);
-                        System.arraycopy(eh.combineAndIncrement(s), 0, by, 0, 64);
-                        this.activeTokens.put(u.getName(), s);
-                    } else {
-                        log(String.format("Login failed"));
-
-                    }
-                } catch (NoSuchAlgorithmException e) {
-                    e.printStackTrace();
-                }
-                break;
+            if (!u.getName().equals(name)) {
+                continue;
             }
+
+            try {
+                // check if the received password match that in the user file.
+                MessageDigest sha = MessageDigest.getInstance("SHA-256");
+                sha.update((u.getSalt() + pass).getBytes());
+                String hpass = Base64.getEncoder().encodeToString(sha.digest());
+
+                // break loop if the found user have provided with wrong password
+                if (!hpass.equals(u.getPass())) {
+                    break;
+                }
+
+                // create a new session for the user and register the token in the server
+                Session s = new Session(eh.generateSessionToken(), 0);
+                this.activeTokens.put(u.getName(), s);
+
+                outMsg = eh.encrypt(eh.combine(s));
+
+                success = true;
+                log(String.format("User: %s has logged in", name));
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            break;
         }
+
         if (!success) {
+            log(String.format("Login failed"));
             throw new RemoteException("Failed to login");
         }
-        return by;
+
+        return outMsg;
     }
 
     @Override
     public boolean logout(Message msg) throws RemoteException {
-        final boolean[] success = {false};
+        final boolean[] success = { false };
         byte[] b = null;
 
         try {
@@ -310,10 +323,12 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (b == null) throw new RemoteException();
+        if (b == null) {
+            throw new RemoteException();
+        }
 
         Session s = eh.splitter(b);
-        final String[] elementToRemove = {null};
+        final String[] elementToRemove = { null };
         this.activeTokens.forEach((key, session) -> {
             if (Arrays.equals(session.getToken(), s.getToken())) {
                 success[0] = true;

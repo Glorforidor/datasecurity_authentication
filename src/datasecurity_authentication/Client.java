@@ -146,8 +146,9 @@ public class Client {
 
 						byte[] combined = eh.combineLogin(username, password);
 						try {
-							// TODO: retrieve message and decode
-							var ss = srv.login(eh.encrypt(combined));
+                            Message ss = srv.login(eh.encrypt(combined));
+                            var bytes = eh.decrypt(ss);
+                            s = eh.splitter(bytes);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
