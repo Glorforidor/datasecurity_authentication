@@ -9,6 +9,10 @@ public class Session {
         this.count = count;
     }
 
+    public void incrementCount() {
+        count++;
+    }
+
     public byte[] getToken() {
         return token;
     }

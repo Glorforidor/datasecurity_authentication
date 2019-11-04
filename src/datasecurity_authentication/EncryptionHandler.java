@@ -68,11 +68,29 @@ public class EncryptionHandler {
         return new Session(token, c);
     }
 
-    public byte[] combiner(Session s) {
+    public User splitterLogin(byte[] b) {
+        byte[] username = new byte[32];
+        byte[] password = new byte[32];
+        System.arraycopy(b, 0, username, 0, 32);
+        System.arraycopy(b, 32, password, 0, 32);
+        return new User(new String(username).trim(), new String(password).trim());
+    }
+
+    public byte[] combineAndIncrement(Session s) {
+        s.incrementCount();
         byte[] b = new byte[64];
         System.arraycopy(s.getToken(), 0, b, 0, 32);
         byte[] count = ByteBuffer.allocate(32).putInt(s.getCount()).array();
         System.arraycopy(count, 0, b, 32, 32);
+        return b;
+    }
+
+    public byte[] combineLogin(String username, String psw) {
+        byte[] b = new byte[64];
+        var user = ByteBuffer.allocate(32).put(username.getBytes()).array();
+        var pass = ByteBuffer.allocate(32).put(psw.getBytes()).array();
+        System.arraycopy(user, 0, b, 0, 32);
+        System.arraycopy(pass, 0, b, 32, 32);
         return b;
     }
 

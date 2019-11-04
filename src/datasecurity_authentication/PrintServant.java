@@ -1,6 +1,5 @@
 package datasecurity_authentication;
 
-import java.nio.ByteBuffer;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.MessageDigest;
@@ -13,6 +12,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     private boolean isRunning;
     private Map<String, String> config;
     private Map<String, Session> activeTokens;
+    private EncryptionHandler eh;
 
     public PrintServant() throws RemoteException {
         super();
@@ -21,6 +21,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         this.printerQueues = new HashMap<>();
         this.config = new HashMap<>();
         this.activeTokens = new HashMap<>();
+        eh = EncryptionHandler.getInstance();
     }
 
     private void log(String msg) {
@@ -28,11 +29,38 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         System.out.println(msg);
     }
 
+    private boolean checkSession(Message msg) throws Exception {
+        var bytes = eh.decrypt(msg);
+        var session = eh.splitter(bytes);
+        var success = false;
+        for (Map.Entry<String, Session> s: activeTokens.entrySet()) {
+            var activeToken = s.getValue();
+            var tokenCheck = Arrays.equals(activeToken.getToken(), session.getToken());
+            if (tokenCheck && activeToken.getCount() + 1 == session.getCount()) {
+                success = true;
+                break;
+            }
+        }
+
+        return success;
+    }
+
     @Override
     public void print(String filename, String printer, Message msg) throws RemoteException {
         if (!isRunning) {
             // TODO: maybe a bit much
             throw new RemoteException("Printer is not running");
+        }
+
+        boolean correct = false;
+        try {
+            correct = checkSession(msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (!correct) {
+            throw new RemoteException("Unauthorized");
         }
 
         log(String.format("Forwarding: %s, to printer: %s", filename, printer));
@@ -47,6 +75,18 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public Map<Integer, String> queue(String printer, Message msg) throws RemoteException {
+        boolean correct = false;
+        try {
+            correct = checkSession(msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (!correct) {
+            throw new RemoteException("Unauthorized");
+        }
+
+
         if (!printerQueues.containsKey(printer)) {
             throw new RemoteException("Printer does not exist");
         }
@@ -62,6 +102,17 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public void topQueue(String printer, int job, Message msg) throws RemoteException {
+        boolean correct = false;
+        try {
+            correct = checkSession(msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (!correct) {
+            throw new RemoteException("Unauthorized");
+        }
+        
         if (job < 1) {
             throw new IllegalArgumentException("job must be above 0");
         }
@@ -77,6 +128,16 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public boolean start(Message msg) throws RemoteException {
+        boolean correct = false;
+        try {
+            correct = checkSession(msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (!correct) {
+            throw new RemoteException("Unauthorized");
+        }
         // TODO: might rethink the return value
         log("Starting server");
         this.isRunning = true;
@@ -85,6 +146,16 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public boolean stop(Message msg) throws RemoteException {
+        boolean correct = false;
+        try {
+            correct = checkSession(msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (!correct) {
+            throw new RemoteException("Unauthorized");
+        }
         // TODO: might rethink the return value
         log("Stopping server");
         this.isRunning = false;
@@ -93,6 +164,17 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public boolean restart(Message msg) throws RemoteException {
+        boolean correct = false;
+        try {
+            correct = checkSession(msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (!correct) {
+            throw new RemoteException("Unauthorized");
+        }
+        
         if (isRunning) {
             log("Stopping Server");
             isRunning = false;
@@ -112,6 +194,17 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public String status(String printer, Message msg) throws RemoteException {
+        boolean correct = false;
+        try {
+            correct = checkSession(msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (!correct) {
+            throw new RemoteException("Unauthorized");
+        }
+        
         if (!printerQueues.containsKey(printer)) {
             throw new RemoteException("Printer does not exist");
         }
@@ -127,18 +220,49 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public String readConfig(String parameter, Message msg) throws RemoteException {
+        boolean correct = false;
+        try {
+            correct = checkSession(msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (!correct) {
+            throw new RemoteException("Unauthorized");
+        }
         log(String.format("Reading configuration with parameter: %s", parameter));
         return config.get(parameter);
     }
 
     @Override
     public void setConfig(String parameter, String value, Message msg) throws RemoteException {
+        boolean correct = false;
+        try {
+            correct = checkSession(msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (!correct) {
+            throw new RemoteException("Unauthorized");
+        }
         log(String.format("Setting configuration with parameter: %s, with value: %s", parameter, value));
         config.put(parameter, value);
     }
 
     @Override
-    public byte[] login(String name, String pass) throws RemoteException {
+    public byte[] login(Message msg) throws RemoteException {
+        String name = null;
+        String pass = null;
+        try {
+            byte[] b = eh.decrypt(msg);
+            User u = eh.splitterLogin(b);
+            name = u.getName();
+            pass = u.getPass();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         var users = UsersManager.readUsers();
         byte[] by = new byte[64];
         boolean success = false;
@@ -151,8 +275,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
                     if (b.equals(u.getPass())) {
                         success = true;
                         log(String.format("User: %s has logged in", name));
-                        Session s = new Session(EncryptionHandler.getInstance().generateSessionToken(), 0);
-                        System.arraycopy(EncryptionHandler.getInstance().combiner(s), 0, by, 0, 64);
+                        Session s = new Session(eh.generateSessionToken(), 0);
+                        System.arraycopy(eh.combineAndIncrement(s), 0, by, 0, 64);
                         this.activeTokens.put(u.getName(), s);
                     } else {
                         log(String.format("Login failed"));
@@ -176,13 +300,13 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         byte[] b = null;
 
         try {
-            b = EncryptionHandler.getInstance().decrypt(msg);
+            b = eh.decrypt(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
         if (b == null) throw new RemoteException();
 
-        Session s = EncryptionHandler.getInstance().splitter(b);
+        Session s = eh.splitter(b);
         final String[] elementToRemove = {null};
         this.activeTokens.forEach((key, session) -> {
             if (Arrays.equals(session.getToken(), s.getToken())) {

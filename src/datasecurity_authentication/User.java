@@ -10,6 +10,11 @@ public class User {
         salt = Salt;
     }
 
+    public User(String Name, String Pass) {
+        name = Name;
+        pass = Pass;
+    }
+
     public String getPass() {
         return pass;
     }

@@ -13,6 +13,7 @@ public class Client {
 
     private static Session s;
 
+
     public static void main(String[] args) throws MalformedURLException, RemoteException, NotBoundException {
         PrintService service = (PrintService) Naming.lookup("rmi://localhost:5099/printserver");
         try {
@@ -26,6 +27,7 @@ public class Client {
 
     static class CLI {
         PrintService srv;
+        EncryptionHandler eh = EncryptionHandler.getInstance();
 
         public CLI(PrintService service) {
             this.srv = service;
@@ -62,57 +64,100 @@ public class Client {
                 switch (input) {
                     case "1": {
                         var printer = readInput(br, "Which printer: ");
-//					System.out.println(srv.status(printer));
+                        byte[] combined = eh.combineAndIncrement(s);
+                        try {
+                            System.out.println(srv.status(printer, eh.encrypt(combined)));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         break;
                     }
                     case "2": {
                         var filename = readInput(br, "Write input file: ");
                         var printer = readInput(br, "Write printer: ");
-//					try {
-//						srv.print(filename, printer);
-//					} catch (RemoteException e) {
-//						System.out.println("Seems the printer is not running, try start it first");
-//					}
+                        byte[] combined = eh.combineAndIncrement(s);
+                        try {
+                            srv.print(filename, printer, eh.encrypt(combined));
+                        } catch (RemoteException e) {
+                            System.out.println("Seems the printer is not running, try start it first");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         break;
                     }
                     case "3": {
                         var printer = readInput(br, "Which printer: ");
-//					var queue = srv.queue(printer);
-//					for (Map.Entry<Integer, String> q : queue.entrySet()) {
-//						System.out.println(String.format("Job number: %d, filename: %s", q.getKey(), q.getValue()));
-//					}
+                        byte[] combined = eh.combineAndIncrement(s);
+                        try {
+                            var queue = srv.queue(printer, eh.encrypt(combined));
+                            for (Map.Entry<Integer, String> q : queue.entrySet()) {
+                                System.out.println(String.format("Job number: %d, filename: %s", q.getKey(), q.getValue()));
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
                         break;
                     }
                     case "4": {
                         var printer = readInput(br, "Which printer: ");
                         var job = readInput(br, "Job number: ");
-//					srv.topQueue(printer, Integer.parseInt(job));
+                        byte[] combined = eh.combineAndIncrement(s);
+                        try {
+                            srv.topQueue(printer, Integer.parseInt(job), eh.encrypt(combined));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         break;
                     }
-                    case "5":
-//					srv.start();
+                    case "5": {
+                        byte[] combined = eh.combineAndIncrement(s);
+                        try {
+                            srv.start(eh.encrypt(combined));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         break;
-                    case "6":
-//					srv.stop();
+                    }
+                    case "6": {
+                        byte[] combined = eh.combineAndIncrement(s);
+                        try {
+                            srv.stop(eh.encrypt(combined));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         break;
-                    case "7":
-//					srv.restart();
+                    }
+                    case "7": {
+                        byte[] combined = eh.combineAndIncrement(s);
+                        try {
+                            srv.restart(eh.encrypt(combined));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         break;
+                    }
                     case "8":
                         running = false;
                         break;
                     case "9": {
                         var username = readInput(br, "Write your username: ");
                         var password = readInput(br, "Write your password: ");
-                        s = EncryptionHandler.getInstance().splitter(srv.login(username, password));
-                        System.out.println(new String(s.getToken()));
+
+						byte[] combined = eh.combineLogin(username, password);
+						try {
+							// TODO: retrieve message and decode
+							var ss = srv.login(eh.encrypt(combined));
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
                         break;
                     }
                     case "10": {
                         if (s != null) {
-                            byte[] combined = EncryptionHandler.getInstance().combiner(s);
+                            byte[] combined = eh.combineAndIncrement(s);
                             try {
-                                srv.logout(EncryptionHandler.getInstance().encrypt(combined));
+                                srv.logout(eh.encrypt(combined));
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }

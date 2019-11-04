@@ -70,7 +70,7 @@ public interface PrintService extends Remote {
      */
     void setConfig(String parameter, String value, Message msg) throws RemoteException;
 
-    byte[] login(String name, String pass) throws RemoteException;
+    byte[] login(Message msg) throws RemoteException;
 
     boolean logout(Message msg) throws RemoteException;
 }
