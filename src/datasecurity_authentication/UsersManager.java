@@ -8,14 +8,16 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * UsersManager manages the creation of the users.csv and populate it with
+ * predifined information. It is also used to read the users.csv.
+ */
 public class UsersManager {
-
-    // TODO: make a better key
     private static String passwdFile = "users.csv";
 
     private static String getSaltedHash(String pass, String salt) {
@@ -33,7 +35,11 @@ public class UsersManager {
         return Base64.getEncoder().encodeToString(sha.digest());
     }
 
-    public static void createDatabaseFile() {
+    /**
+     * createUsersFile creates the users.csv and populate the file with
+     * predifined users.
+     */
+    public static void createUsersFile() {
         SecureRandom rand = new SecureRandom();
         // create salts
         byte[] salt = new byte[128];
@@ -68,19 +74,23 @@ public class UsersManager {
         }
     }
 
-    public static LinkedList<User> readUsers() {
-        var list = new LinkedList<User>();
+    /**
+     * readUsers reads the users.csv and return a list of the users within.
+     * @return list of users
+     */
+    public static ArrayList<User> readUsers() {
+        var list = new ArrayList<User>();
         try (BufferedReader br = new BufferedReader(new FileReader(passwdFile))) {
             String row;
             while ((row = br.readLine()) != null) {
                 String[] data = row.split(",");
                 // Skip header line
-                if (data[0].equals("Name")){
+                if (data[0].equals("Name")) {
                     continue;
                 }
                 list.add(new User(data[0], data[1], data[2]));
             }
-        } catch(IOException e) {
+        } catch (IOException e) {
             // TODO: better exception handling
             e.printStackTrace();
         }
