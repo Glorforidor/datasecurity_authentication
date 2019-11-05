@@ -10,9 +10,7 @@ import java.rmi.RemoteException;
 import java.util.Map;
 
 public class Client {
-
     private static Session s;
-
 
     public static void main(String[] args) throws MalformedURLException, RemoteException, NotBoundException {
         PrintService service = (PrintService) Naming.lookup("rmi://localhost:5099/printserver");
@@ -28,6 +26,7 @@ public class Client {
     static class CLI {
         PrintService srv;
         EncryptionHandler eh = EncryptionHandler.getInstance();
+        DataUtil dUtil = DataUtil.getInstance();
 
         public CLI(PrintService service) {
             this.srv = service;
@@ -62,114 +61,115 @@ public class Client {
             while (running) {
                 var input = br.readLine();
                 switch (input) {
-                    case "1": {
-                        var printer = readInput(br, "Which printer: ");
-                        byte[] combined = eh.combineAndIncrement(s);
-                        try {
-                            System.out.println(srv.status(printer, eh.encrypt(combined)));
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        break;
+                case "1": {
+                    var printer = readInput(br, "Which printer: ");
+                    byte[] combined = dUtil.incrementAndSplitSession(s);
+                    try {
+                        System.out.println(srv.status(printer, eh.encrypt(combined)));
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    case "2": {
-                        var filename = readInput(br, "Write input file: ");
-                        var printer = readInput(br, "Write printer: ");
-                        byte[] combined = eh.combineAndIncrement(s);
-                        try {
-                            srv.print(filename, printer, eh.encrypt(combined));
-                        } catch (RemoteException e) {
-                            System.out.println("Seems the printer is not running, try start it first");
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        break;
+                    break;
+                }
+                case "2": {
+                    var filename = readInput(br, "Write input file: ");
+                    var printer = readInput(br, "Write printer: ");
+                    byte[] combined = dUtil.incrementAndSplitSession(s);
+                    try {
+                        srv.print(filename, printer, eh.encrypt(combined));
+                    } catch (RemoteException e) {
+                        System.out.println("Seems the printer is not running, try start it first");
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    case "3": {
-                        var printer = readInput(br, "Which printer: ");
-                        byte[] combined = eh.combineAndIncrement(s);
-                        try {
-                            var queue = srv.queue(printer, eh.encrypt(combined));
-                            for (Map.Entry<Integer, String> q : queue.entrySet()) {
-                                System.out.println(String.format("Job number: %d, filename: %s", q.getKey(), q.getValue()));
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                    break;
+                }
+                case "3": {
+                    var printer = readInput(br, "Which printer: ");
+                    byte[] combined = dUtil.incrementAndSplitSession(s);
+                    try {
+                        var queue = srv.queue(printer, eh.encrypt(combined));
+                        for (Map.Entry<Integer, String> q : queue.entrySet()) {
+                            System.out.printf("Job number: %d, filename: %s\n", q.getKey(), q.getValue());
                         }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
 
-                        break;
+                    break;
+                }
+                case "4": {
+                    var printer = readInput(br, "Which printer: ");
+                    var job = readInput(br, "Job number: ");
+                    byte[] combined = dUtil.incrementAndSplitSession(s);
+                    try {
+                        srv.topQueue(printer, Integer.parseInt(job), eh.encrypt(combined));
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    case "4": {
-                        var printer = readInput(br, "Which printer: ");
-                        var job = readInput(br, "Job number: ");
-                        byte[] combined = eh.combineAndIncrement(s);
-                        try {
-                            srv.topQueue(printer, Integer.parseInt(job), eh.encrypt(combined));
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        break;
+                    break;
+                }
+                case "5": {
+                    byte[] combined = dUtil.incrementAndSplitSession(s);
+                    try {
+                        srv.start(eh.encrypt(combined));
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    case "5": {
-                        byte[] combined = eh.combineAndIncrement(s);
-                        try {
-                            srv.start(eh.encrypt(combined));
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        break;
+                    break;
+                }
+                case "6": {
+                    byte[] combined = dUtil.incrementAndSplitSession(s);
+                    try {
+                        srv.stop(eh.encrypt(combined));
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    case "6": {
-                        byte[] combined = eh.combineAndIncrement(s);
-                        try {
-                            srv.stop(eh.encrypt(combined));
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        break;
+                    break;
+                }
+                case "7": {
+                    byte[] combined = dUtil.incrementAndSplitSession(s);
+                    try {
+                        srv.restart(eh.encrypt(combined));
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    case "7": {
-                        byte[] combined = eh.combineAndIncrement(s);
-                        try {
-                            srv.restart(eh.encrypt(combined));
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        break;
-                    }
-                    case "8":
-                        running = false;
-                        break;
-                    case "9": {
-                        var username = readInput(br, "Write your username: ");
-                        var password = readInput(br, "Write your password: ");
+                    break;
+                }
+                case "8":
+                    running = false;
+                    break;
+                case "9": {
+                    var username = readInput(br, "Write your username: ");
+                    var password = readInput(br, "Write your password: ");
 
-						byte[] combined = eh.combineLogin(username, password);
-						try {
-                            Message ss = srv.login(eh.encrypt(combined));
-                            var bytes = eh.decrypt(ss);
-                            s = eh.splitter(bytes);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-                        break;
+                    byte[] combined = dUtil.splitUser(username, password);
+                    try {
+                        Message ss = srv.login(eh.encrypt(combined));
+                        var bytes = eh.decrypt(ss);
+                        s = dUtil.combineToSession(bytes);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    case "10": {
-                        if (s != null) {
-                            byte[] combined = eh.combineAndIncrement(s);
-                            try {
-                                srv.logout(eh.encrypt(combined));
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
+                    break;
+                }
+                case "10": {
+                    if (s != null) {
+                        byte[] combined = dUtil.incrementAndSplitSession(s);
+                        try {
+                            srv.logout(eh.encrypt(combined));
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
-                        break;
                     }
-                    case "?":
-                        menu();
-                        break;
-                    default:
-                        System.out.println("Wrong input");
+                    break;
+                }
+                case "?":
+                    menu();
+                    break;
+                default:
+                    System.out.println("Wrong input");
+                    break;
                 }
             }
         }
