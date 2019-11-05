@@ -6,6 +6,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
+/**
+ * PrintServant implements the PrintService interface.
+ */
 public class PrintServant extends UnicastRemoteObject implements PrintService {
     private static final long serialVersionUID = 8627793523520780643L;
     private Map<String, LinkedList<String>> printerQueues;
@@ -13,15 +16,17 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     private Map<String, String> config;
     private Map<String, Session> activeTokens;
     private EncryptionHandler eh;
+    private DataUtil dUtil;
 
     public PrintServant() throws RemoteException {
         super();
         // create the database file with populated users
-        UsersManager.createDatabaseFile();
+        UsersManager.createUsersFile();
         this.printerQueues = new HashMap<>();
         this.config = new HashMap<>();
         this.activeTokens = new HashMap<>();
         eh = EncryptionHandler.getInstance();
+        dUtil = DataUtil.getInstance();
     }
 
     private void log(String msg) {
@@ -31,7 +36,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     private boolean checkAndUpdateSession(Message msg) throws Exception {
         var bytes = eh.decrypt(msg);
-        var session = eh.splitter(bytes);
+        var session = dUtil.combineToSession(bytes);
         var success = false;
         for (Map.Entry<String, Session> s : activeTokens.entrySet()) {
             var activeToken = s.getValue();
@@ -262,7 +267,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         String pass = null;
         try {
             byte[] b = eh.decrypt(msg);
-            User u = eh.splitterLogin(b);
+            User u = dUtil.combineToUser(b);
             name = u.getName();
             pass = u.getPass();
 
@@ -290,10 +295,10 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
                 }
 
                 // create a new session for the user and register the token in the server
-                Session s = new Session(eh.generateSessionToken(), 0);
+                Session s = new Session();
                 this.activeTokens.put(u.getName(), s);
 
-                outMsg = eh.encrypt(eh.combine(s));
+                outMsg = eh.encrypt(dUtil.splitSession(s));
 
                 success = true;
                 log(String.format("User: %s has logged in", name));
@@ -327,7 +332,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
             throw new RemoteException();
         }
 
-        Session s = eh.splitter(b);
+        Session s = dUtil.combineToSession(b);
         final String[] elementToRemove = { null };
         this.activeTokens.forEach((key, session) -> {
             if (Arrays.equals(session.getToken(), s.getToken())) {

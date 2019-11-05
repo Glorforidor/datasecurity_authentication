@@ -7,7 +7,6 @@ import java.io.Serializable;
  * that was used for encrypting the data.
  */
 public class Message implements Serializable {
-
     /**
      * ensure that the class is serialised correctly
      */
