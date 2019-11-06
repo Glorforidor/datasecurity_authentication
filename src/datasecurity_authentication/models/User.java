@@ -1,4 +1,4 @@
-package datasecurity_authentication;
+package datasecurity_authentication.models;
 
 
 public class User {

@@ -1,4 +1,4 @@
-package datasecurity_authentication;
+package datasecurity_authentication.server;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;

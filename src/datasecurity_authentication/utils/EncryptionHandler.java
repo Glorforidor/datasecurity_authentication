@@ -1,4 +1,6 @@
-package datasecurity_authentication;
+package datasecurity_authentication.utils;
+
+import datasecurity_authentication.models.Message;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;

@@ -1,4 +1,6 @@
-package datasecurity_authentication;
+package datasecurity_authentication.server;
+
+import datasecurity_authentication.models.Message;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

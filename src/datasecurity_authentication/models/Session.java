@@ -1,4 +1,4 @@
-package datasecurity_authentication;
+package datasecurity_authentication.models;
 
 import java.security.SecureRandom;
 

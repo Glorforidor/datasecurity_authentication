@@ -1,4 +1,11 @@
-package datasecurity_authentication;
+package datasecurity_authentication.server;
+
+import datasecurity_authentication.models.Session;
+import datasecurity_authentication.models.User;
+import datasecurity_authentication.models.UsersManager;
+import datasecurity_authentication.models.Message;
+import datasecurity_authentication.utils.DataUtil;
+import datasecurity_authentication.utils.EncryptionHandler;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;

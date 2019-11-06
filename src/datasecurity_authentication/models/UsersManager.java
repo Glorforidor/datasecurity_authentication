@@ -1,4 +1,4 @@
-package datasecurity_authentication;
+package datasecurity_authentication.models;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * UsersManager manages the creation of the users.csv and populate it with
- * predifined information. It is also used to read the users.csv.
+ * predefined information. It is also used to read the users.csv.
  */
 public class UsersManager {
     private static String passwdFile = "users.csv";

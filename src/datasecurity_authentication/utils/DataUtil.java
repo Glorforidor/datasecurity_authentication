@@ -1,4 +1,7 @@
-package datasecurity_authentication;
+package datasecurity_authentication.utils;
+
+import datasecurity_authentication.models.Session;
+import datasecurity_authentication.models.User;
 
 import java.nio.ByteBuffer;
 
