@@ -113,9 +113,11 @@ public class Client {
                     if (session != null) {
                         var printer = readInput(br, "Which printer: ");
                         var job = readInput(br, "Job number: ");
-                        byte[] combined = dUtil.incrementAndSplitSession(session);
                         try {
-                            srv.topQueue(printer, Integer.parseInt(job), eh.encrypt(combined));
+                            // first successfully parse job to an integer before calling print server
+                            int j = Integer.parseInt(job);
+                            byte[] combined = dUtil.incrementAndSplitSession(session);
+                            srv.topQueue(printer, j, eh.encrypt(combined));
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
