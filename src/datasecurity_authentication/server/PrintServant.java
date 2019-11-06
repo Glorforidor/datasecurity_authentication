@@ -1,17 +1,25 @@
 package datasecurity_authentication.server;
 
-import datasecurity_authentication.models.Session;
-import datasecurity_authentication.models.User;
-import datasecurity_authentication.models.UsersManager;
-import datasecurity_authentication.models.Message;
-import datasecurity_authentication.utils.DataUtil;
-import datasecurity_authentication.utils.EncryptionHandler;
-
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+
+import datasecurity_authentication.models.Message;
+import datasecurity_authentication.models.Session;
+import datasecurity_authentication.models.User;
+import datasecurity_authentication.models.UsersManager;
+import datasecurity_authentication.utils.DataUtil;
+import datasecurity_authentication.utils.EncryptionHandler;
 
 /**
  * PrintServant implements the PrintService interface.
@@ -24,6 +32,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     private Map<String, Session> activeTokens;
     private EncryptionHandler eh;
     private DataUtil dUtil;
+    private File logFile;
 
     public PrintServant() throws RemoteException {
         super();
@@ -34,11 +43,23 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         this.activeTokens = new HashMap<>();
         eh = EncryptionHandler.getInstance();
         dUtil = DataUtil.getInstance();
+        logFile = new File("printerserver.log");
     }
 
     private void log(String msg) {
-        // TODO: perhaps make this logger more interessting by log to a file.
-        System.out.println(msg);
+        this.log(msg, true);
+    }
+
+    private void log(String msg, boolean newline) {
+        try (BufferedWriter buf = new BufferedWriter(new FileWriter(logFile, true))) {
+            buf.write(msg);
+            if (newline) {
+                buf.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println(msg);
+        }
     }
 
     private boolean checkAndUpdateSession(Message msg) throws Exception {
@@ -57,6 +78,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
             if (countCheck) {
                 success = true;
                 activeTokens.put(s.getKey(), session);
+                log("User: " + s.getKey() + ", ", false);
                 break;
             }
         }
@@ -81,6 +103,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         if (!correct) {
             throw new RemoteException("Unauthorized");
         }
+        log("Method: print");
 
         log(String.format("Forwarding: %s, to printer: %s", filename, printer));
         if (printerQueues.containsKey(printer)) {
@@ -108,6 +131,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         if (!printerQueues.containsKey(printer)) {
             throw new RemoteException("Printer does not exist");
         }
+        log("Method: queue");
 
         var printerQueue = printerQueues.get(printer);
         Map<Integer, String> queue = new HashMap<>();
@@ -130,6 +154,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         if (!correct) {
             throw new RemoteException("Unauthorized");
         }
+        log("Method: topQueue");
 
         if (job < 1) {
             throw new IllegalArgumentException("job must be above 0");
@@ -156,6 +181,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         if (!correct) {
             throw new RemoteException("Unauthorized");
         }
+        log("Method: start");
+        
         // TODO: might rethink the return value
         log("Starting server");
         this.isRunning = true;
@@ -174,6 +201,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         if (!correct) {
             throw new RemoteException("Unauthorized");
         }
+        log("Method: stop");
         // TODO: might rethink the return value
         log("Stopping server");
         this.isRunning = false;
@@ -192,6 +220,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         if (!correct) {
             throw new RemoteException("Unauthorized");
         }
+        log("Method: restart");
 
         if (isRunning) {
             log("Stopping Server");
@@ -222,6 +251,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         if (!correct) {
             throw new RemoteException("Unauthorized");
         }
+        log("Method: status");
 
         if (!printerQueues.containsKey(printer)) {
             throw new RemoteException("Printer does not exist");
@@ -248,6 +278,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         if (!correct) {
             throw new RemoteException("Unauthorized");
         }
+        log("Method: readConfig");
+
         log(String.format("Reading configuration with parameter: %s", parameter));
         return config.get(parameter);
     }
@@ -264,6 +296,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         if (!correct) {
             throw new RemoteException("Unauthorized");
         }
+        log("Method: setConfig");
         log(String.format("Setting configuration with parameter: %s, with value: %s", parameter, value));
         config.put(parameter, value);
     }
@@ -348,6 +381,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
             }
         });
         this.activeTokens.remove(elementToRemove[0]);
+        log(String.format("User: %s, has logged out", elementToRemove[0]));
         return success[0];
     }
 }
