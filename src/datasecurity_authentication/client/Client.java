@@ -15,6 +15,9 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.Map;
 
+/**
+ * Client application to interact with the Print Server.
+ */
 public class Client {
     private static Session session;
 
@@ -29,6 +32,9 @@ public class Client {
         System.out.println("Bye");
     }
 
+    /**
+     * CLI for a client.
+     */
     static class CLI {
         PrintService srv;
         EncryptionHandler eh = EncryptionHandler.getInstance();
