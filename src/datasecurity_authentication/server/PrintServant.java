@@ -34,6 +34,10 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     private DataUtil dUtil;
     private File logFile;
 
+    private enum Operations {
+        print, queue, topQueue, status, start, stop, restart, readConfig, setConfig
+    }
+
     public PrintServant() throws RemoteException {
         super();
         // create the database file with populated users
@@ -62,9 +66,14 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         }
     }
 
-    private boolean checkAndUpdateSession(Message msg) throws Exception {
+    private Session getSession(Message msg) throws Exception {
         var bytes = eh.decrypt(msg);
         var session = dUtil.combineToSession(bytes);
+
+        return session;
+    }
+
+    private boolean checkAndUpdateSession(Session session) {
         var success = false;
         for (Map.Entry<String, Session> s : activeTokens.entrySet()) {
             var activeToken = s.getValue();
@@ -86,6 +95,19 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         return success;
     }
 
+    private String findUsernameBySession(Session session) {
+        String username = null;
+        for (Map.Entry<String, Session> s : activeTokens.entrySet()) {
+            var activeToken = s.getValue();
+            if (Arrays.equals(activeToken.getToken(), session.getToken())) {
+                username = s.getKey();
+                break; 
+            }
+        }
+
+        return username;
+    }
+
     @Override
     public void print(String filename, String printer, Message msg) throws RemoteException {
         if (!isRunning) {
@@ -93,16 +115,27 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
             throw new RemoteException("Printer is not running");
         }
 
-        boolean correct = false;
+        Session session = null;
         try {
-            correct = checkAndUpdateSession(msg);
+            session = getSession(msg);
         } catch (Exception e) {
+            // TODO: think about it.. what have you done!
             e.printStackTrace();
         }
 
+        boolean correct = checkAndUpdateSession(session);
         if (!correct) {
+            log("Unauthorized");
             throw new RemoteException("Unauthorized");
         }
+       
+        var username = findUsernameBySession(session);
+        var allowed = UsersManager.isOperationAllowed(username, Operations.print.toString());
+        if (!allowed) {
+            log("Unauthorized");
+            throw new RemoteException("Unauthorized");
+        }
+
         log("Method: print");
 
         log(String.format("Forwarding: %s, to printer: %s", filename, printer));
@@ -118,8 +151,11 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     @Override
     public Map<Integer, String> queue(String printer, Message msg) throws RemoteException {
         boolean correct = false;
+
+
         try {
-            correct = checkAndUpdateSession(msg);
+            var session = getSession(msg);
+            correct = checkAndUpdateSession(session);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -146,7 +182,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     public void topQueue(String printer, int job, Message msg) throws RemoteException {
         boolean correct = false;
         try {
-            correct = checkAndUpdateSession(msg);
+            var session = getSession(msg);
+            correct = checkAndUpdateSession(session);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -173,7 +210,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     public boolean start(Message msg) throws RemoteException {
         boolean correct = false;
         try {
-            correct = checkAndUpdateSession(msg);
+            var session = getSession(msg);
+            correct = checkAndUpdateSession(session);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -193,7 +231,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     public boolean stop(Message msg) throws RemoteException {
         boolean correct = false;
         try {
-            correct = checkAndUpdateSession(msg);
+            var session = getSession(msg);
+            correct = checkAndUpdateSession(session);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -212,7 +251,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     public boolean restart(Message msg) throws RemoteException {
         boolean correct = false;
         try {
-            correct = checkAndUpdateSession(msg);
+            var session = getSession(msg);
+            correct = checkAndUpdateSession(session);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -243,7 +283,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     public String status(String printer, Message msg) throws RemoteException {
         boolean correct = false;
         try {
-            correct = checkAndUpdateSession(msg);
+            var session = getSession(msg);
+            correct = checkAndUpdateSession(session);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -270,7 +311,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     public String readConfig(String parameter, Message msg) throws RemoteException {
         boolean correct = false;
         try {
-            correct = checkAndUpdateSession(msg);
+            var session = getSession(msg);
+            correct = checkAndUpdateSession(session);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -288,7 +330,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
     public void setConfig(String parameter, String value, Message msg) throws RemoteException {
         boolean correct = false;
         try {
-            correct = checkAndUpdateSession(msg);
+            var session = getSession(msg);
+            correct = checkAndUpdateSession(session);
         } catch (Exception e) {
             e.printStackTrace();
         }
