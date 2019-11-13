@@ -11,7 +11,9 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import datasecurity_authentication.models.User;
 
@@ -20,7 +22,8 @@ import datasecurity_authentication.models.User;
  * predefined information. It is also used to read the users.csv.
  */
 public class UsersManager {
-    private static String passwdFile = "users.csv";
+    private static final String passwdFile = "users.csv";
+    private static final String aclFile = "acl.policy";
 
     private static String getSaltedHash(String pass, String salt) {
         MessageDigest sha = null;
@@ -99,5 +102,40 @@ public class UsersManager {
         return list;
     }
 
+    private static Map<String,String> readACL(String filename) {
+        Map<String, String> m = new HashMap<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+            String row;
+            while ((row = br.readLine()) != null) {
+                String[] data = row.split(":");
+                m.put(data[0], data[1]);
+            }
+        } catch (IOException e) {
+            // TODO: better exception handling
+            e.printStackTrace();
+        }
 
+        return m;
+    }
+
+    public static boolean isOperationAllowed(String username, String operation) {
+        Map<String,String> userToOperation = readACL(aclFile);
+
+        var operations = userToOperation.get(username);
+
+        if (operations == null) {
+            return false;
+        }
+        
+        var found = false;
+        var splitOperations = operations.split(",");
+        for (String op : splitOperations) {
+            if (op.equals(operation)) {
+                found = true;
+                break;
+            }
+        }
+
+        return found;
+    }
 }
