@@ -1,4 +1,4 @@
-package datasecurity_authentication.models;
+package datasecurity_authentication.utils;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
