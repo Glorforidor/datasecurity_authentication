@@ -17,9 +17,9 @@ import java.util.Map;
 import datasecurity_authentication.models.Message;
 import datasecurity_authentication.models.Session;
 import datasecurity_authentication.models.User;
-import datasecurity_authentication.models.UsersManager;
 import datasecurity_authentication.utils.DataUtil;
 import datasecurity_authentication.utils.EncryptionHandler;
+import datasecurity_authentication.utils.UsersManager;
 
 /**
  * PrintServant implements the PrintService interface.
