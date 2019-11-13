@@ -13,6 +13,8 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
+import datasecurity_authentication.models.User;
+
 /**
  * UsersManager manages the creation of the users.csv and populate it with
  * predefined information. It is also used to read the users.csv.
@@ -96,4 +98,6 @@ public class UsersManager {
         }
         return list;
     }
+
+
 }
