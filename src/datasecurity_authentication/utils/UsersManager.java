@@ -50,24 +50,40 @@ public class UsersManager {
         byte[] salt = new byte[128];
         byte[] salt1 = new byte[128];
         byte[] salt2 = new byte[128];
+        byte[] salt3 = new byte[128];
+        byte[] salt4 = new byte[128];
+        byte[] salt5 = new byte[128];
+        byte[] salt6 = new byte[128];
         rand.nextBytes(salt);
         rand.nextBytes(salt1);
         rand.nextBytes(salt2);
+        rand.nextBytes(salt3);
+        rand.nextBytes(salt4);
+        rand.nextBytes(salt5);
+        rand.nextBytes(salt6);
 
         List<List<String>> rows = Arrays.asList(
-                Arrays.asList("Soren", getSaltedHash("123", Base64.getEncoder().encodeToString(salt)),
+                Arrays.asList("alice", getSaltedHash("123", Base64.getEncoder().encodeToString(salt)),
                         Base64.getEncoder().encodeToString(salt)),
-                Arrays.asList("David", getSaltedHash("456", Base64.getEncoder().encodeToString(salt)),
+                Arrays.asList("bob", getSaltedHash("123", Base64.getEncoder().encodeToString(salt1)),
                         Base64.getEncoder().encodeToString(salt1)),
-                Arrays.asList("Scott", getSaltedHash("789", Base64.getEncoder().encodeToString(salt)),
-                        Base64.getEncoder().encodeToString(salt2)));
+                Arrays.asList("cecilia", getSaltedHash("123", Base64.getEncoder().encodeToString(salt2)),
+                        Base64.getEncoder().encodeToString(salt2)),
+                Arrays.asList("erica", getSaltedHash("123", Base64.getEncoder().encodeToString(salt3)),
+                        Base64.getEncoder().encodeToString(salt3)),
+                Arrays.asList("david", getSaltedHash("123", Base64.getEncoder().encodeToString(salt4)),
+                        Base64.getEncoder().encodeToString(salt4)),
+                Arrays.asList("fred", getSaltedHash("123", Base64.getEncoder().encodeToString(salt5)),
+                        Base64.getEncoder().encodeToString(salt5)),
+                Arrays.asList("george", getSaltedHash("123", Base64.getEncoder().encodeToString(salt6)),
+                        Base64.getEncoder().encodeToString(salt6)));
 
         try (FileWriter fw = new FileWriter(passwdFile)) {
-            fw.append("Name");
+            fw.append("name");
             fw.append(",");
-            fw.append("Password");
+            fw.append("password");
             fw.append(",");
-            fw.append("Salt");
+            fw.append("salt");
             fw.append("\n");
 
             for (List<String> rowData : rows) {
