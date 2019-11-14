@@ -93,7 +93,7 @@ public class Client {
                         try {
                             srv.print(filename, printer, eh.encrypt(combined));
                         } catch (RemoteException e) {
-                            System.out.println("Seems the printer is not running, try start it first");
+                            System.out.println(e.getMessage());
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
