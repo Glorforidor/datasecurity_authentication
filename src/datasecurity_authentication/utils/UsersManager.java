@@ -37,6 +37,7 @@ public class UsersManager {
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
+        // base64 encode to avoid escape charectors
         return Base64.getEncoder().encodeToString(sha.digest());
     }
 
@@ -64,6 +65,7 @@ public class UsersManager {
         rand.nextBytes(salt6);
         rand.nextBytes(salt7);
 
+        // add users to a list
         List<List<String>> rows = Arrays.asList(
                 Arrays.asList("alice", getSaltedHash("123", Base64.getEncoder().encodeToString(salt)),
                         Base64.getEncoder().encodeToString(salt)),
@@ -83,6 +85,7 @@ public class UsersManager {
                         Base64.getEncoder().encodeToString(salt7)));
 
         try (FileWriter fw = new FileWriter(passwdFile)) {
+            // create the header of the users file
             fw.append("name");
             fw.append(",");
             fw.append("password");
@@ -90,6 +93,7 @@ public class UsersManager {
             fw.append("salt");
             fw.append("\n");
 
+            // write add the users to the users file
             for (List<String> rowData : rows) {
                 fw.append(String.join(",", rowData));
                 fw.append("\n");
@@ -114,6 +118,7 @@ public class UsersManager {
                 if (data[0].equals("Name")) {
                     continue;
                 }
+                // data[0] = name, data[1] = pass, data[2] = salt
                 list.add(new User(data[0], data[1], data[2]));
             }
         } catch (IOException e) {
@@ -129,6 +134,7 @@ public class UsersManager {
             String row;
             while ((row = br.readLine()) != null) {
                 String[] data = row.split(":");
+                // data[0] = user, data[1] = operations
                 m.put(data[0], data[1]);
             }
         } catch (IOException e) {
@@ -139,11 +145,17 @@ public class UsersManager {
         return m;
     }
 
+    /**
+     * isOperationAllowed checks whether a user is allowed to do the operation.
+     * 
+     * @param username  the user
+     * @param operation the operation which to check if it is allowed
+     * @return true if the operation is allowd otherwise false.
+     */
     public static boolean isOperationAllowed(String username, String operation) {
         Map<String, String> userToOperation = readACL(aclFile);
 
         var operations = userToOperation.get(username);
-
         if (operations == null) {
             return false;
         }
