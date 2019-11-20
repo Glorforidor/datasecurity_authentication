@@ -37,12 +37,13 @@ public class UsersManager {
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
+        // base64 encode to avoid escape charectors
         return Base64.getEncoder().encodeToString(sha.digest());
     }
 
     /**
-     * createUsersFile creates the users.csv and populate the file with
-     * predifined users.
+     * createUsersFile creates the users.csv and populate the file with predifined
+     * users.
      */
     public static void createUsersFile() {
         SecureRandom rand = new SecureRandom();
@@ -67,26 +68,27 @@ public class UsersManager {
         rand.nextBytes(salt7);
         rand.nextBytes(salt8);
 
-
+        // add users to a list
         List<List<String>> rows = Arrays.asList(
                 Arrays.asList("alice", getSaltedHash("123", Base64.getEncoder().encodeToString(salt)),
                         Base64.getEncoder().encodeToString(salt), "admin"),
                 Arrays.asList("cecilia", getSaltedHash("123", Base64.getEncoder().encodeToString(salt2)),
-                        Base64.getEncoder().encodeToString(salt2),"powerUser"),
+                        Base64.getEncoder().encodeToString(salt2), "powerUser"),
                 Arrays.asList("erica", getSaltedHash("123", Base64.getEncoder().encodeToString(salt3)),
-                        Base64.getEncoder().encodeToString(salt3),"ordinaryUser"),
+                        Base64.getEncoder().encodeToString(salt3), "ordinaryUser"),
                 Arrays.asList("david", getSaltedHash("123", Base64.getEncoder().encodeToString(salt4)),
-                        Base64.getEncoder().encodeToString(salt4),"ordinaryUser"),
+                        Base64.getEncoder().encodeToString(salt4), "ordinaryUser"),
                 Arrays.asList("fred", getSaltedHash("123", Base64.getEncoder().encodeToString(salt5)),
-                        Base64.getEncoder().encodeToString(salt5),"ordinaryUser"),
+                        Base64.getEncoder().encodeToString(salt5), "ordinaryUser"),
                 Arrays.asList("george", getSaltedHash("123", Base64.getEncoder().encodeToString(salt6)),
-                        Base64.getEncoder().encodeToString(salt6),"janitor"),
+                        Base64.getEncoder().encodeToString(salt6), "janitor"),
                 Arrays.asList("henry", getSaltedHash("123", Base64.getEncoder().encodeToString(salt7)),
-                        Base64.getEncoder().encodeToString(salt7),"ordinaryUser"),
+                        Base64.getEncoder().encodeToString(salt7), "ordinaryUser"),
                 Arrays.asList("ida", getSaltedHash("123", Base64.getEncoder().encodeToString(salt8)),
-                        Base64.getEncoder().encodeToString(salt8),"powerUser"));
+                        Base64.getEncoder().encodeToString(salt8), "powerUser"));
 
         try (FileWriter fw = new FileWriter(passwdFile)) {
+            // create the header of the users file
             fw.append("name");
             fw.append(",");
             fw.append("password");
@@ -96,6 +98,7 @@ public class UsersManager {
             fw.append("role");
             fw.append("\n");
 
+            // write add the users to the users file
             for (List<String> rowData : rows) {
                 fw.append(String.join(",", rowData));
                 fw.append("\n");
@@ -107,6 +110,7 @@ public class UsersManager {
 
     /**
      * readUsers reads the users.csv and return a list of the users within.
+     * 
      * @return list of users
      */
     public static ArrayList<User> readUsers() {
@@ -119,6 +123,7 @@ public class UsersManager {
                 if (data[0].equals("Name")) {
                     continue;
                 }
+                // data[0] = name, data[1] = pass, data[2] = salt, data[3] = role
                 list.add(new User(data[0], data[1], data[2], data[3]));
             }
         } catch (IOException e) {
@@ -128,12 +133,13 @@ public class UsersManager {
         return list;
     }
 
-    private static Map<String,String> readRBAC(String filename) {
+    private static Map<String, String> readRBAC(String filename) {
         Map<String, String> m = new HashMap<>();
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             String row;
             while ((row = br.readLine()) != null) {
                 String[] data = row.split(":");
+                // data[0] = role, data[1] = operations
                 m.put(data[0], data[1]);
             }
         } catch (IOException e) {
@@ -143,15 +149,22 @@ public class UsersManager {
         return m;
     }
 
+    /**
+     * isOperationAllowed checks whether a user is allowed to do the operation.
+     * 
+     * @param username  the user
+     * @param operation the operation which to check if it is allowed
+     * @return true if the operation is allowd otherwise false.
+     */
     public static boolean isOperationAllowed(String role, String operation) {
-        Map<String,String> roleToOperation = readRBAC(rbacFile);
+        Map<String, String> roleToOperation = readRBAC(rbacFile);
 
         var operations = roleToOperation.get(role);
 
         if (operations == null) {
             return false;
         }
-        
+
         var found = false;
         var splitOperations = operations.split(",");
         for (String op : splitOperations) {

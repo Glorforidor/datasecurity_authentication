@@ -61,11 +61,11 @@ public class DataUtil {
      * @return byte array of the splitted Session.
      */
     public byte[] splitSession(Session session) {
-        byte[] b = new byte[64];
-        System.arraycopy(session.getToken(), 0, b, 0, 32);
+        byte[] data = new byte[64];
+        System.arraycopy(session.getToken(), 0, data, 0, 32);
         byte[] count = ByteBuffer.allocate(32).putInt(session.getCount()).array();
-        System.arraycopy(count, 0, b, 32, 32);
-        return b;
+        System.arraycopy(count, 0, data, 32, 32);
+        return data;
     }
 
     /**
