@@ -54,6 +54,7 @@ public class UsersManager {
         byte[] salt4 = new byte[128];
         byte[] salt5 = new byte[128];
         byte[] salt6 = new byte[128];
+        byte[] salt7 = new byte[128];
         rand.nextBytes(salt);
         rand.nextBytes(salt1);
         rand.nextBytes(salt2);
@@ -61,11 +62,12 @@ public class UsersManager {
         rand.nextBytes(salt4);
         rand.nextBytes(salt5);
         rand.nextBytes(salt6);
+        rand.nextBytes(salt7);
 
         List<List<String>> rows = Arrays.asList(
                 Arrays.asList("alice", getSaltedHash("123", Base64.getEncoder().encodeToString(salt)),
                         Base64.getEncoder().encodeToString(salt)),
-                Arrays.asList("bob", getSaltedHash("123", Base64.getEncoder().encodeToString(salt1)),
+                Arrays.asList("ida", getSaltedHash("123", Base64.getEncoder().encodeToString(salt1)),
                         Base64.getEncoder().encodeToString(salt1)),
                 Arrays.asList("cecilia", getSaltedHash("123", Base64.getEncoder().encodeToString(salt2)),
                         Base64.getEncoder().encodeToString(salt2)),
@@ -76,7 +78,9 @@ public class UsersManager {
                 Arrays.asList("fred", getSaltedHash("123", Base64.getEncoder().encodeToString(salt5)),
                         Base64.getEncoder().encodeToString(salt5)),
                 Arrays.asList("george", getSaltedHash("123", Base64.getEncoder().encodeToString(salt6)),
-                        Base64.getEncoder().encodeToString(salt6)));
+                        Base64.getEncoder().encodeToString(salt6)),
+                Arrays.asList("henry", getSaltedHash("123", Base64.getEncoder().encodeToString(salt7)),
+                        Base64.getEncoder().encodeToString(salt7)));
 
         try (FileWriter fw = new FileWriter(passwdFile)) {
             fw.append("name");
