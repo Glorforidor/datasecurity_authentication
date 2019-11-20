@@ -15,7 +15,8 @@ public class Message implements Serializable {
     private byte[] iv;
 
     /**
-     * Message constructs a new Message with encrypted data and the initialization vector.
+     * Message constructs a new Message with encrypted data and the initialization
+     * vector.
      * 
      * @param data data that should be encrypted.
      * @param iv   the used initialization vector of the encrypted data.

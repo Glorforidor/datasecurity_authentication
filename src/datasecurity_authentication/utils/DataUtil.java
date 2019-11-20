@@ -14,7 +14,8 @@ import java.nio.ByteBuffer;
 public class DataUtil {
     private static DataUtil instance;
 
-    private DataUtil(){}
+    private DataUtil() {
+    }
 
     public static DataUtil getInstance() {
         if (instance == null) {
@@ -41,7 +42,7 @@ public class DataUtil {
     }
 
     /**
-     * combineToUser combines the data into a User. 
+     * combineToUser combines the data into a User.
      * 
      * @param data the data to split. The data must be of length 64, where the first
      *             32 bytes are the username and the last 32 bytes are the password.
@@ -57,6 +58,7 @@ public class DataUtil {
 
     /**
      * splitSession splits the Session into a data byte array.
+     * 
      * @param session the Session to split.
      * @return byte array of the splitted Session.
      */
@@ -69,7 +71,9 @@ public class DataUtil {
     }
 
     /**
-     * incrementAndSplitSession increments the Session count and splits Session into a data byte array.
+     * incrementAndSplitSession increments the Session count and splits Session into
+     * a data byte array.
+     * 
      * @param session the Session to increment and split.
      * @return byte array of the splitted Session.
      */
@@ -80,6 +84,7 @@ public class DataUtil {
 
     /**
      * splitUser splits the username and password into a data byte array.
+     * 
      * @param username the username to split.
      * @param password the password to split.
      * @return byte array of the splitted username nad password.

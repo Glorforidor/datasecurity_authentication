@@ -10,6 +10,7 @@ public class User {
 
     /**
      * User constructs a new User with name and pass.
+     * 
      * @param name name of the user.
      * @param pass password of the user.
      */
@@ -19,8 +20,9 @@ public class User {
     }
 
     /**
-     * User constructs a new User with name, pass and salt.
-     * This constructor is mostly usefull when loading up users from users file.
+     * User constructs a new User with name, pass and salt. This constructor is
+     * mostly usefull when loading up users from users file.
+     * 
      * @param name name of the user.
      * @param pass password of the user.
      * @param salt the salt used with the hashing of the password.
@@ -32,6 +34,7 @@ public class User {
 
     /**
      * getPass returns the password of the user.
+     * 
      * @return the password of the user.
      */
     public String getPass() {
@@ -40,6 +43,7 @@ public class User {
 
     /**
      * getSalt returns the salt.
+     * 
      * @return the salt which was used to hash the password.
      */
     public String getSalt() {
@@ -48,6 +52,7 @@ public class User {
 
     /**
      * getName returns the name of the user.
+     * 
      * @return the name of the user.
      */
     public String getName() {

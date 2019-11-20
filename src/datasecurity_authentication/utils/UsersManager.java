@@ -41,8 +41,8 @@ public class UsersManager {
     }
 
     /**
-     * createUsersFile creates the users.csv and populate the file with
-     * predifined users.
+     * createUsersFile creates the users.csv and populate the file with predifined
+     * users.
      */
     public static void createUsersFile() {
         SecureRandom rand = new SecureRandom();
@@ -97,6 +97,7 @@ public class UsersManager {
 
     /**
      * readUsers reads the users.csv and return a list of the users within.
+     * 
      * @return list of users
      */
     public static ArrayList<User> readUsers() {
@@ -118,7 +119,7 @@ public class UsersManager {
         return list;
     }
 
-    private static Map<String,String> readACL(String filename) {
+    private static Map<String, String> readACL(String filename) {
         Map<String, String> m = new HashMap<>();
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             String row;
@@ -134,17 +135,15 @@ public class UsersManager {
         return m;
     }
 
-
-
     public static boolean isOperationAllowed(String username, String operation) {
-        Map<String,String> userToOperation = readACL(aclFile);
+        Map<String, String> userToOperation = readACL(aclFile);
 
         var operations = userToOperation.get(username);
 
         if (operations == null) {
             return false;
         }
-        
+
         var found = false;
         var splitOperations = operations.split(",");
         for (String op : splitOperations) {
