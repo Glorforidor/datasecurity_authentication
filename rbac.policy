@@ -1,0 +1,4 @@
+admin:print,queue,topQueue,start,stop,restart,status,readConfig,setConfig
+janitor:start,stop,restart,status,readConfig,setConfig
+powerUser:print,queue,topQueue
+ordinaryUser:print,queue

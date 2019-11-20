@@ -23,7 +23,7 @@ import datasecurity_authentication.models.User;
  */
 public class UsersManager {
     private static final String passwdFile = "users.csv";
-    private static final String aclFile = "acl.policy";
+    private static final String rbacFile = "rbac.policy";
 
     private static String getSaltedHash(String pass, String salt) {
         MessageDigest sha = null;
@@ -64,19 +64,19 @@ public class UsersManager {
 
         List<List<String>> rows = Arrays.asList(
                 Arrays.asList("alice", getSaltedHash("123", Base64.getEncoder().encodeToString(salt)),
-                        Base64.getEncoder().encodeToString(salt)),
+                        Base64.getEncoder().encodeToString(salt), "admin"),
                 Arrays.asList("bob", getSaltedHash("123", Base64.getEncoder().encodeToString(salt1)),
-                        Base64.getEncoder().encodeToString(salt1)),
+                        Base64.getEncoder().encodeToString(salt1),"janitor"),
                 Arrays.asList("cecilia", getSaltedHash("123", Base64.getEncoder().encodeToString(salt2)),
-                        Base64.getEncoder().encodeToString(salt2)),
+                        Base64.getEncoder().encodeToString(salt2),"powerUser"),
                 Arrays.asList("erica", getSaltedHash("123", Base64.getEncoder().encodeToString(salt3)),
-                        Base64.getEncoder().encodeToString(salt3)),
+                        Base64.getEncoder().encodeToString(salt3),"ordinaryUser"),
                 Arrays.asList("david", getSaltedHash("123", Base64.getEncoder().encodeToString(salt4)),
-                        Base64.getEncoder().encodeToString(salt4)),
+                        Base64.getEncoder().encodeToString(salt4),"ordinaryUser"),
                 Arrays.asList("fred", getSaltedHash("123", Base64.getEncoder().encodeToString(salt5)),
-                        Base64.getEncoder().encodeToString(salt5)),
+                        Base64.getEncoder().encodeToString(salt5),"ordinaryUser"),
                 Arrays.asList("george", getSaltedHash("123", Base64.getEncoder().encodeToString(salt6)),
-                        Base64.getEncoder().encodeToString(salt6)));
+                        Base64.getEncoder().encodeToString(salt6),"ordinaryUser"));
 
         try (FileWriter fw = new FileWriter(passwdFile)) {
             fw.append("name");
@@ -84,6 +84,8 @@ public class UsersManager {
             fw.append("password");
             fw.append(",");
             fw.append("salt");
+            fw.append(",");
+            fw.append("role");
             fw.append("\n");
 
             for (List<String> rowData : rows) {
@@ -109,7 +111,7 @@ public class UsersManager {
                 if (data[0].equals("Name")) {
                     continue;
                 }
-                list.add(new User(data[0], data[1], data[2]));
+                list.add(new User(data[0], data[1], data[2], data[3]));
             }
         } catch (IOException e) {
             // TODO: better exception handling
@@ -118,7 +120,7 @@ public class UsersManager {
         return list;
     }
 
-    private static Map<String,String> readACL(String filename) {
+    private static Map<String,String> readRBAC(String filename) {
         Map<String, String> m = new HashMap<>();
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             String row;
@@ -130,16 +132,13 @@ public class UsersManager {
             // TODO: better exception handling
             e.printStackTrace();
         }
-
         return m;
     }
 
+    public static boolean isOperationAllowed(String role, String operation) {
+        Map<String,String> roleToOperation = readRBAC(rbacFile);
 
-
-    public static boolean isOperationAllowed(String username, String operation) {
-        Map<String,String> userToOperation = readACL(aclFile);
-
-        var operations = userToOperation.get(username);
+        var operations = roleToOperation.get(role);
 
         if (operations == null) {
             return false;

@@ -8,11 +8,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 
 import datasecurity_authentication.models.Message;
 import datasecurity_authentication.models.Session;
@@ -108,6 +104,19 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         return username;
     }
 
+    private String findRoleBySession(Session session) {
+        String role = null;
+        String username = findUsernameBySession(session);
+        ArrayList<User> users = UsersManager.readUsers();
+        for (User user : users) {
+            if (user.getName().equals(username)) {
+                role = user.getRole();
+                break;
+            }
+        }
+        return role;
+    }
+
     @Override
     public void print(String filename, String printer, Message msg) throws RemoteException {
         if (!isRunning) {
@@ -124,8 +133,9 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         }
 
         boolean correct = checkAndUpdateSession(session);
-        var username = findUsernameBySession(session);
-        var allowed = UsersManager.isOperationAllowed(username, Operations.print.toString());
+        var role = findRoleBySession(session);
+
+        var allowed = UsersManager.isOperationAllowed(role, Operations.print.toString());
         if (!allowed || !correct) {
             log("Unauthorized");
             throw new RemoteException("Unauthorized");
@@ -153,8 +163,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         }
 
         boolean correct = checkAndUpdateSession(session);
-        var username = findUsernameBySession(session);
-        var allowed = UsersManager.isOperationAllowed(username, Operations.queue.toString());
+        var role = findRoleBySession(session);
+        var allowed = UsersManager.isOperationAllowed(role, Operations.queue.toString());
 
         if (!correct || !allowed) {
             log("Unauthorized");
@@ -185,8 +195,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         }
 
         boolean correct = checkAndUpdateSession(session);
-        var username = findUsernameBySession(session);
-        var allowed = UsersManager.isOperationAllowed(username, Operations.topQueue.toString());
+        var role = findRoleBySession(session);
+        var allowed = UsersManager.isOperationAllowed(role, Operations.topQueue.toString());
 
         if (!correct || !allowed) {
             log("Unauthorized");
@@ -218,8 +228,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         }
 
         boolean correct = checkAndUpdateSession(session);
-        var username = findUsernameBySession(session);
-        var allowed = UsersManager.isOperationAllowed(username, Operations.start.toString());
+        var role = findRoleBySession(session);
+        var allowed = UsersManager.isOperationAllowed(role, Operations.start.toString());
 
         if (!correct || !allowed) {
             log("Unauthorized");
@@ -244,8 +254,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         }
 
         boolean correct = checkAndUpdateSession(session);
-        var username = findUsernameBySession(session);
-        var allowed = UsersManager.isOperationAllowed(username, Operations.stop.toString());
+        var role = findRoleBySession(session);
+        var allowed = UsersManager.isOperationAllowed(role, Operations.stop.toString());
 
         if (!correct || !allowed) {
             log("Unauthorized");
@@ -269,8 +279,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         }
 
         boolean correct = checkAndUpdateSession(session);
-        var username = findUsernameBySession(session);
-        var allowed = UsersManager.isOperationAllowed(username, Operations.restart.toString());
+        var role = findRoleBySession(session);
+        var allowed = UsersManager.isOperationAllowed(role, Operations.restart.toString());
 
         if (!correct || !allowed) {
             log("Unauthorized");
@@ -305,8 +315,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         }
 
         boolean correct = checkAndUpdateSession(session);
-        var username = findUsernameBySession(session);
-        var allowed = UsersManager.isOperationAllowed(username, Operations.status.toString());
+        var role = findRoleBySession(session);
+        var allowed = UsersManager.isOperationAllowed(role, Operations.status.toString());
 
         if (!correct || !allowed) {
             log("Unauthorized");
@@ -337,8 +347,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         }
 
         boolean correct = checkAndUpdateSession(session);
-        var username = findUsernameBySession(session);
-        var allowed = UsersManager.isOperationAllowed(username, Operations.readConfig.toString());
+        var role = findRoleBySession(session);
+        var allowed = UsersManager.isOperationAllowed(role, Operations.readConfig.toString());
 
         if (!correct || !allowed) {
             log("Unauthorized");
@@ -360,8 +370,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         }
 
         boolean correct = checkAndUpdateSession(session);
-        var username = findUsernameBySession(session);
-        var allowed = UsersManager.isOperationAllowed(username, Operations.setConfig.toString());
+        var role = findRoleBySession(session);
+        var allowed = UsersManager.isOperationAllowed(role, Operations.setConfig.toString());
 
         if (!correct || !allowed) {
             log("Unauthorized");
