@@ -134,6 +134,8 @@ public class UsersManager {
         return m;
     }
 
+
+
     public static boolean isOperationAllowed(String username, String operation) {
         Map<String,String> userToOperation = readACL(aclFile);
 

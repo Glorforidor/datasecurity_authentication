@@ -124,14 +124,9 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         }
 
         boolean correct = checkAndUpdateSession(session);
-        if (!correct) {
-            log("Unauthorized");
-            throw new RemoteException("Unauthorized");
-        }
-       
         var username = findUsernameBySession(session);
         var allowed = UsersManager.isOperationAllowed(username, Operations.print.toString());
-        if (!allowed) {
+        if (!allowed || !correct) {
             log("Unauthorized");
             throw new RemoteException("Unauthorized");
         }
@@ -150,17 +145,19 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public Map<Integer, String> queue(String printer, Message msg) throws RemoteException {
-        boolean correct = false;
-
-
+        Session session = null;
         try {
-            var session = getSession(msg);
-            correct = checkAndUpdateSession(session);
+            session = getSession(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        if (!correct) {
+        boolean correct = checkAndUpdateSession(session);
+        var username = findUsernameBySession(session);
+        var allowed = UsersManager.isOperationAllowed(username, Operations.queue.toString());
+
+        if (!correct || !allowed) {
+            log("Unauthorized");
             throw new RemoteException("Unauthorized");
         }
 
@@ -180,17 +177,22 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public void topQueue(String printer, int job, Message msg) throws RemoteException {
-        boolean correct = false;
+        Session session = null;
         try {
-            var session = getSession(msg);
-            correct = checkAndUpdateSession(session);
+            session = getSession(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        if (!correct) {
+        boolean correct = checkAndUpdateSession(session);
+        var username = findUsernameBySession(session);
+        var allowed = UsersManager.isOperationAllowed(username, Operations.topQueue.toString());
+
+        if (!correct || !allowed) {
+            log("Unauthorized");
             throw new RemoteException("Unauthorized");
         }
+
         log("Method: topQueue");
 
         if (job < 1) {
@@ -208,17 +210,22 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public boolean start(Message msg) throws RemoteException {
-        boolean correct = false;
+        Session session = null;
         try {
-            var session = getSession(msg);
-            correct = checkAndUpdateSession(session);
+            session = getSession(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        if (!correct) {
+        boolean correct = checkAndUpdateSession(session);
+        var username = findUsernameBySession(session);
+        var allowed = UsersManager.isOperationAllowed(username, Operations.start.toString());
+
+        if (!correct || !allowed) {
+            log("Unauthorized");
             throw new RemoteException("Unauthorized");
         }
+
         log("Method: start");
         
         // TODO: might rethink the return value
@@ -229,17 +236,22 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public boolean stop(Message msg) throws RemoteException {
-        boolean correct = false;
+        Session session = null;
         try {
-            var session = getSession(msg);
-            correct = checkAndUpdateSession(session);
+            session = getSession(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        if (!correct) {
+        boolean correct = checkAndUpdateSession(session);
+        var username = findUsernameBySession(session);
+        var allowed = UsersManager.isOperationAllowed(username, Operations.stop.toString());
+
+        if (!correct || !allowed) {
+            log("Unauthorized");
             throw new RemoteException("Unauthorized");
         }
+
         log("Method: stop");
         // TODO: might rethink the return value
         log("Stopping server");
@@ -249,15 +261,19 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public boolean restart(Message msg) throws RemoteException {
-        boolean correct = false;
+        Session session = null;
         try {
-            var session = getSession(msg);
-            correct = checkAndUpdateSession(session);
+            session = getSession(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        if (!correct) {
+        boolean correct = checkAndUpdateSession(session);
+        var username = findUsernameBySession(session);
+        var allowed = UsersManager.isOperationAllowed(username, Operations.restart.toString());
+
+        if (!correct || !allowed) {
+            log("Unauthorized");
             throw new RemoteException("Unauthorized");
         }
         log("Method: restart");
@@ -281,15 +297,19 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public String status(String printer, Message msg) throws RemoteException {
-        boolean correct = false;
+        Session session = null;
         try {
-            var session = getSession(msg);
-            correct = checkAndUpdateSession(session);
+            session = getSession(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        if (!correct) {
+        boolean correct = checkAndUpdateSession(session);
+        var username = findUsernameBySession(session);
+        var allowed = UsersManager.isOperationAllowed(username, Operations.status.toString());
+
+        if (!correct || !allowed) {
+            log("Unauthorized");
             throw new RemoteException("Unauthorized");
         }
         log("Method: status");
@@ -309,15 +329,19 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public String readConfig(String parameter, Message msg) throws RemoteException {
-        boolean correct = false;
+        Session session = null;
         try {
-            var session = getSession(msg);
-            correct = checkAndUpdateSession(session);
+            session = getSession(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        if (!correct) {
+        boolean correct = checkAndUpdateSession(session);
+        var username = findUsernameBySession(session);
+        var allowed = UsersManager.isOperationAllowed(username, Operations.readConfig.toString());
+
+        if (!correct || !allowed) {
+            log("Unauthorized");
             throw new RemoteException("Unauthorized");
         }
         log("Method: readConfig");
@@ -328,15 +352,19 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
     @Override
     public void setConfig(String parameter, String value, Message msg) throws RemoteException {
-        boolean correct = false;
+        Session session = null;
         try {
-            var session = getSession(msg);
-            correct = checkAndUpdateSession(session);
+            session = getSession(msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        if (!correct) {
+        boolean correct = checkAndUpdateSession(session);
+        var username = findUsernameBySession(session);
+        var allowed = UsersManager.isOperationAllowed(username, Operations.setConfig.toString());
+
+        if (!correct || !allowed) {
+            log("Unauthorized");
             throw new RemoteException("Unauthorized");
         }
         log("Method: setConfig");
