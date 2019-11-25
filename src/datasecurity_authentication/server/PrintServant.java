@@ -46,29 +46,60 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         logFile = new File("printerserver.log");
     }
 
-    private void log(String msg) {
-        this.log(msg, true);
+    /**
+     * log logs and append the message to logFile.
+     * 
+     * @param message
+     */
+    private void log(String message) {
+        this.log(message, true);
     }
 
-    private void log(String msg, boolean newline) {
+    /**
+     * log logs the message to logFile. Newline decides whether the message is
+     * appended or not.
+     * 
+     * @param message the message to log
+     * @param newline add newline if true otherwise skip.
+     */
+    private void log(String message, boolean newline) {
         try (BufferedWriter buf = new BufferedWriter(new FileWriter(logFile, true))) {
-            buf.write(msg);
+            buf.write(message);
             if (newline) {
                 buf.newLine();
             }
         } catch (IOException e) {
             e.printStackTrace();
-            System.out.println(msg);
+            System.out.println(message);
         }
     }
 
-    private Session getSession(Message msg) throws Exception {
-        var bytes = eh.decrypt(msg);
+    /**
+     * getSession gets the session from the message.
+     * 
+     * @param message the message to extract the session from.
+     * @return the session
+     * @throws Exception
+     */
+    private Session getSession(Message message) throws Exception {
+        // decrypt the message into byte array
+        var bytes = eh.decrypt(message);
+
+        // combine the byte array into a session
         var session = dUtil.combineToSession(bytes);
 
         return session;
     }
 
+    /**
+     * checkAndUpdateSession checks whether a session is valid. If the session is
+     * valid, it will also update the current knowlegde of the session on the
+     * server.
+     * 
+     * @param session the session to check validity for.
+     * @return true if the session is valid and updated on the server, otherwise
+     *         false.
+     */
     private boolean checkAndUpdateSession(Session session) {
         var success = false;
         for (Map.Entry<String, Session> s : activeTokens.entrySet()) {
@@ -91,13 +122,19 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         return success;
     }
 
+    /**
+     * findUsernameBySession finds the user that is assosiated with the session.
+     * 
+     * @param session the session to check who is assosiated to it
+     * @return the username
+     */
     private String findUsernameBySession(Session session) {
         String username = null;
         for (Map.Entry<String, Session> s : activeTokens.entrySet()) {
             var activeToken = s.getValue();
             if (Arrays.equals(activeToken.getToken(), session.getToken())) {
                 username = s.getKey();
-                break; 
+                break;
             }
         }
 
@@ -237,7 +274,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
         }
 
         log("Method: start");
-        
+
         // TODO: might rethink the return value
         log("Starting server");
         this.isRunning = true;
